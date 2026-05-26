@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>DMBDocumentationBuilder</RootNamespace>
+        <Title>DMBDocumentationBuilder</Title>
+        <PackageTags>idemobi Documentation Viewer</PackageTags>
+        <Description>DMBDocumentationBuilder</Description>
+        <PackageReleaseNotes>note</PackageReleaseNotes>
+        <PackageIcon>DMBDocumentationBuilder.png</PackageIcon>
+        <AssemblyOriginatorKeyFile>DMBDocumentationBuilder.snk</AssemblyOriginatorKeyFile>
+        <PackageId>DMBDocumentationBuilder</PackageId>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <EnableDefaultRazorGenerateItems>true</EnableDefaultRazorGenerateItems>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <IncludeRazorContentInPack>false</IncludeRazorContentInPack>
+        <EmbedRazorGenerateSources>false</EmbedRazorGenerateSources>
+        <LangVersion>default</LangVersion>
+        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <SignAssembly>true</SignAssembly>
+        <PublicSign>true</PublicSign>
+        <Configurations>Debug;Release;NuGet</Configurations>
+        <Platforms>AnyCPU</Platforms>
+        <VersionBase>$([System.DateTime]::UtcNow.ToString("yyyy.Mdd.HHmm"))</VersionBase>
+        
+        <BuildDate>$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</BuildDate>
+        <Version>0.9.0</Version>
+        <FileVersion>0.9.0.0</FileVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <Company>idéMobi</Company>
+        <Authors>Jean-François CONTART and Quentin BOULOGNE</Authors>
+        <Copyright>Copyright © $(Company) $([System.DateTime]::UtcNow.ToString("yyyy"))</Copyright>
+        <NeutralLanguage>en</NeutralLanguage>
+        <PackageProjectUrl>https://dev.azure.com/Game-Data-Forge/Game-Data-Forge</PackageProjectUrl>
+        <PackageLicenseUrl>https://dev.azure.com/Game-Data-Forge/Game-Data-Forge/_git/Game-Data-Forge?path=/LICENCE.md</PackageLicenseUrl>
+        <RepositoryUrl>https://Game-Data-Forge@dev.azure.com/Game-Data-Forge/Game-Data-Forge/_git/Game-Data-Forge</RepositoryUrl>
+        <RepositoryType>AzureDevOps</RepositoryType>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <GenerateAssemblyMetadataAttribute>true</GenerateAssemblyMetadataAttribute>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DefineConstants/>
+        <DocumentationFile>bin\Release\net10.0\DMBDocumentationBuilder.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DocumentationFile>bin\Debug\net10.0\DMBDocumentationBuilder.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'NuGet' ">
+        <DefineConstants>NUGET</DefineConstants>
+        <Optimize>true</Optimize>
+        <DocumentationFile>bin\NuGet\net10.0\DMBDocumentationBuilder.xml</DocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <Choose>
+        <When Condition=" '$(Configuration)' == 'NuGet' ">
+            <ItemGroup Label="Case NuGet">
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup Label="Case Debug, Release, Deployment">
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
+    <ItemGroup Label="Import package">
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+    </ItemGroup>
+    <ItemGroup Label="Files in package">
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="DMBDocumentationBuilder.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+</Project>
