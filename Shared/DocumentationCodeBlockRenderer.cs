@@ -84,7 +84,7 @@ namespace DMBDocumentationBuilder
         private static string DecodeCodeText(string encodedCode)
         {
             string withoutTags = HtmlTagRegex.Replace(encodedCode, string.Empty);
-            return WebUtility.HtmlDecode(withoutTags);
+            return WebUtility.HtmlDecode(withoutTags) ?? string.Empty;
         }
 
         private static bool LooksLikeCSharpPropertySignature(string plainText)

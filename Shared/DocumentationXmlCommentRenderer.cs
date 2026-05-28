@@ -813,7 +813,7 @@ namespace DMBDocumentationBuilder
 
         private static XDocument? TryGetDocumentationDocument(ISymbol symbol)
         {
-            string xml = symbol.GetDocumentationCommentXml(
+            string? xml = symbol.GetDocumentationCommentXml(
                 expandIncludes: true,
                 cancellationToken: default);
 

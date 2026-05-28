@@ -13,12 +13,21 @@ namespace DMBDocumentationBuilder
     {
         #region Static fields and properties
 
+        /// <summary>
+        /// Gets the shared comparer instance used to order documentation versions.
+        /// </summary>
         public static readonly DocumentationVersionComparer Instance = new();
 
         #endregion
 
         #region Instance methods
 
+        /// <summary>
+        /// Compares two documentation version labels using numeric version parts first and ordinal text as a fallback.
+        /// </summary>
+        /// <param name="x">The first version label to compare.</param>
+        /// <param name="y">The second version label to compare.</param>
+        /// <returns>A signed integer that indicates the relative order of <paramref name="x"/> and <paramref name="y"/>.</returns>
         public int Compare(string? x, string? y)
         {
             if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase))

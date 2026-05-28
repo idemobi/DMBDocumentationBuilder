@@ -82,7 +82,8 @@ namespace DMBDocumentationBuilder
             {
                 string namespaceName = type.ContainingNamespace?.ToDisplayString() ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(namespaceName) &&
-                    TryResolveProject(type, projects, out ProjectIndexItem? project))
+                    TryResolveProject(type, projects, out ProjectIndexItem? project) &&
+                    project is not null)
                 {
                     INamedTypeSymbol original = type.OriginalDefinition;
                     string key = BuildTypeKey(original);

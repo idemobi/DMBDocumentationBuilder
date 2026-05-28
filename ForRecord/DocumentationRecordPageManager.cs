@@ -47,7 +47,7 @@ namespace DMBDocumentationBuilder
             List<string> modifiers = [];
             if (!string.IsNullOrWhiteSpace(accessibility)) modifiers.Add(accessibility);
 
-            string recordKeyword = recordDeclaration.ClassOrStructKeyword.Kind() == SyntaxKind.StructKeyword
+            string recordKeyword = recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword)
                 ? "record struct"
                 : "record";
 
@@ -271,7 +271,7 @@ namespace DMBDocumentationBuilder
                                 AssemblyName = project.DisplayName + ".dll",
                                 XmlDoc = recordXmlDoc,
                                 Declaration = BuildDeclaration(recordSymbol, recordDeclaration),
-                                IsRecordStruct = recordDeclaration.ClassOrStructKeyword.Kind() == SyntaxKind.StructKeyword,
+                                IsRecordStruct = recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword),
                                 IsSealed = recordSymbol.IsSealed,
                                 IsObsolete = DocumentationAttributeHelper.IsObsolete(recordSymbol, out _),
                                 ObsoleteMessage = recordObsoleteMessage

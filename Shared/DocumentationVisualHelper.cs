@@ -96,8 +96,8 @@ namespace DMBDocumentationBuilder
         /// <summary>
         /// Initializes shared DocumentationBuilder visual rendering metadata.
         /// </summary>
-        /// <param name="Source">The Source value used by the documentation generation operation.</param>
         /// <param name="symbol">The symbol value used by the documentation generation operation.</param>
+        /// <returns>The combined source text and the number of syntax files that contributed to it.</returns>
         public static (string Source, int FileCount) ExtractFullSource(INamedTypeSymbol symbol)
         {
             List<string> parts = [];

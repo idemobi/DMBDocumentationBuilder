@@ -61,7 +61,7 @@ namespace DMBDocumentationBuilder
             if (string.IsNullOrWhiteSpace(html)) return Array.Empty<string>();
 
             string text = HtmlTagRegex.Replace(html, " ");
-            text = WebUtility.HtmlDecode(text);
+            text = WebUtility.HtmlDecode(text) ?? string.Empty;
 
             string[] rawWords = WordSplitRegex.Split(text);
 
