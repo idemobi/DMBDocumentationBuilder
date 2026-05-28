@@ -3,7 +3,7 @@
         <RootNamespace>DMBDocumentationBuilder</RootNamespace>
         <Title>DMBDocumentationBuilder</Title>
         <PackageTags>idemobi Documentation Viewer</PackageTags>
-        <Description>DMBDocumentationBuilder</Description>
+        <Description>Documentation generation package that extracts XML comments, Markdown content, OpenAPI metadata, and source context.</Description>
         <PackageReleaseNotes>note</PackageReleaseNotes>
         <PackageIcon>DMBDocumentationBuilder.png</PackageIcon>
         <AssemblyOriginatorKeyFile>DMBDocumentationBuilder.snk</AssemblyOriginatorKeyFile>
@@ -35,7 +35,7 @@
         <FileVersion>0.12.0.0</FileVersion>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <Company>idéMobi</Company>
-        <Authors>Jean-François CONTART and Quentin BOULOGNE</Authors>
+        <Authors>Jean-François CONTART, Quentin BOULOGNE, Camille GOLLIOT</Authors>
         <Copyright>Copyright © $(Company) $([System.DateTime]::UtcNow.ToString("yyyy"))</Copyright>
         <NeutralLanguage>en</NeutralLanguage>
         <PackageProjectUrl>https://dev.azure.com/Game-Data-Forge/Game-Data-Forge</PackageProjectUrl>
