@@ -31,15 +31,15 @@
         <VersionBase>$([System.DateTime]::UtcNow.ToString("yyyy.Mdd.HHmm"))</VersionBase>
         
         <BuildDate>$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</BuildDate>
-        <Version>0.10.0</Version>
-        <FileVersion>0.10.0.0</FileVersion>
+        <Version>0.11.0</Version>
+        <FileVersion>0.11.0.0</FileVersion>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <Company>idéMobi</Company>
         <Authors>Jean-François CONTART and Quentin BOULOGNE</Authors>
         <Copyright>Copyright © $(Company) $([System.DateTime]::UtcNow.ToString("yyyy"))</Copyright>
         <NeutralLanguage>en</NeutralLanguage>
         <PackageProjectUrl>https://dev.azure.com/Game-Data-Forge/Game-Data-Forge</PackageProjectUrl>
-        <PackageLicenseUrl>https://dev.azure.com/Game-Data-Forge/Game-Data-Forge/_git/Game-Data-Forge?path=/LICENCE.md</PackageLicenseUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <RepositoryUrl>https://Game-Data-Forge@dev.azure.com/Game-Data-Forge/Game-Data-Forge/_git/Game-Data-Forge</RepositoryUrl>
         <RepositoryType>AzureDevOps</RepositoryType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -76,6 +76,7 @@
     </ItemGroup>
     <ItemGroup Label="Files in package">
         <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="LICENSE.md" Pack="true" PackagePath="\"/>
         <None Include="DMBDocumentationBuilder.png" Pack="true" PackagePath="\"/>
     </ItemGroup>
 </Project>
