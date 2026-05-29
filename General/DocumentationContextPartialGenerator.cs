@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationContextPartialGenerator.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -55,7 +53,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Ensures that group customization partial files exist for generated documentation pages.
+        ///     Ensures that group customization partial files exist for generated documentation pages.
         /// </summary>
         /// <param name="customizeRootDirectory">The customizeRootDirectory value used by the documentation generation operation.</param>
         /// <param name="groupName">The groupName value used by the documentation generation operation.</param>
@@ -84,7 +82,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Ensures that namespace customization partial files exist for generated documentation pages.
+        ///     Ensures that namespace customization partial files exist for generated documentation pages.
         /// </summary>
         /// <param name="customizeRootDirectory">The customizeRootDirectory value used by the documentation generation operation.</param>
         /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>

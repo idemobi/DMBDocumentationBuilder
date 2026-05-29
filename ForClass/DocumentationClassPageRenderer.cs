@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationClassPageRenderer.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -16,7 +14,7 @@ using System.Text;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationClassPageRenderer type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationClassPageRenderer type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationClassPageRenderer
     {
@@ -50,21 +48,6 @@ namespace DMBDocumentationBuilder
         private static string Html(string? value)
         {
             return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
-        }
-
-        private static string ResolveLinkGroupName(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
-        {
-            return string.IsNullOrWhiteSpace(target.GroupName) ? item.GroupName : target.GroupName;
-        }
-
-        private static string ResolveLinkPackageId(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
-        {
-            return string.IsNullOrWhiteSpace(target.PackageId) ? item.PackageId : target.PackageId;
-        }
-
-        private static string ResolveLinkVersion(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
-        {
-            return string.IsNullOrWhiteSpace(target.Version) ? item.Version : target.Version;
         }
 
         private static string ReadPartialContent(
@@ -102,10 +85,13 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the HTML content for one generated documentation page.
+        ///     Renders the HTML content for one generated documentation page.
         /// </summary>
         /// <param name="item">The item value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         /// <returns>The RenderHtmlPage result produced by DocumentationBuilder generation.</returns>
         public static string RenderHtmlPage(
             DocumentationClassPageModel item,
@@ -880,11 +866,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Writes generated documentation pages for the supplied documentation models.
+        ///     Writes generated documentation pages for the supplied documentation models.
         /// </summary>
         /// <param name="items">The items value used by the documentation generation operation.</param>
         /// <param name="pageOutputDirectory">The pageOutputDirectory value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         public static void RenderPages(
             IEnumerable<DocumentationClassPageModel> items,
             string pageOutputDirectory,
@@ -900,6 +889,21 @@ namespace DMBDocumentationBuilder
                     item.NamespaceName,
                     item.ClassName);
             }
+        }
+
+        private static string ResolveLinkGroupName(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
+        {
+            return string.IsNullOrWhiteSpace(target.GroupName) ? item.GroupName : target.GroupName;
+        }
+
+        private static string ResolveLinkPackageId(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
+        {
+            return string.IsNullOrWhiteSpace(target.PackageId) ? item.PackageId : target.PackageId;
+        }
+
+        private static string ResolveLinkVersion(DocumentationClassPageModel item, DocumentationTypeLinkItem target)
+        {
+            return string.IsNullOrWhiteSpace(target.Version) ? item.Version : target.Version;
         }
 
         #endregion

@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationSidebarDatabaseGenerator.cs create at 2026/05/18 22:05:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -16,31 +14,11 @@ using System.Text.Json;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Persists versioned sidebar data used by DocumentationViewer.
+    ///     Persists versioned sidebar data used by DocumentationViewer.
     /// </summary>
     public static class DocumentationSidebarDatabaseGenerator
     {
         #region Static methods
-
-        /// <summary>
-        /// Persists sidebar data for the package versions included in the current generation.
-        /// </summary>
-        /// <param name="index">The documentation index used to build sidebar entries.</param>
-        /// <param name="groups">The documentation group descriptors that own optional Markdown sidebar content.</param>
-        /// <param name="sqliteDatabasePath">The SQLite database path that receives the sidebar entries.</param>
-        public static void GenerateSidebarData(
-            DocumentationIndex index,
-            IEnumerable<DocumentationGroupDescriptor> groups,
-            string sqliteDatabasePath
-        )
-        {
-            if (index is null) throw new ArgumentNullException(nameof(index));
-            if (groups is null) throw new ArgumentNullException(nameof(groups));
-
-            DocumentationDatabaseManager.ReplaceGeneratedSidebarItems(
-                sqliteDatabasePath,
-                BuildSidebarItems(index, groups));
-        }
 
         private static void AddGroupSidebarItems(
             DocumentationGroupItem group,
@@ -148,6 +126,179 @@ namespace DMBDocumentationBuilder
             }
         }
 
+        private static void AddMarkdownContentGroups(
+            string sidebarKind,
+            string sidebarGroupName,
+            string sidebarPackageId,
+            string sidebarVersion,
+            string sidebarNamespaceName,
+            string parentItemKey,
+            string routeGroupName,
+            DocumentationProjectDescriptor project,
+            List<DocumentationSidebarItem> items
+        )
+        {
+            IReadOnlyList<DocumentationMarkdownContentItem> markdownItems = DocumentationMarkdownContentScanner.Scan(project);
+
+            int sectionIndex = 0;
+
+            foreach (IGrouping<string, DocumentationMarkdownContentItem> section in markdownItems
+                         .GroupBy(item => item.SectionTitle, StringComparer.Ordinal)
+                         .OrderBy(group => group.Key, StringComparer.Ordinal))
+            {
+                DocumentationMarkdownContentItem first = section.First();
+                string sectionKey = $"{parentItemKey}:markdown:{first.ObjectType}:{first.SectionTitle}";
+
+                items.Add(CreateGroupItem(
+                    sidebarKind,
+                    sidebarGroupName,
+                    sidebarPackageId,
+                    sidebarVersion,
+                    sidebarNamespaceName,
+                    sectionKey,
+                    parentItemKey,
+                    first.SectionTitle,
+                    first.Icon,
+                    100 + sectionIndex++));
+
+                foreach (IGrouping<string, DocumentationMarkdownContentItem> folder in section
+                             .GroupBy(item => item.FolderTitle, StringComparer.Ordinal)
+                             .OrderBy(group => group.Key, StringComparer.Ordinal))
+                {
+                    if (string.IsNullOrWhiteSpace(folder.Key))
+                    {
+                        AddMarkdownRoutes(
+                            sidebarKind,
+                            sidebarGroupName,
+                            sidebarPackageId,
+                            sidebarVersion,
+                            sidebarNamespaceName,
+                            sectionKey,
+                            routeGroupName,
+                            project,
+                            folder,
+                            items);
+                    }
+                    else
+                    {
+                        string folderKey = $"{sectionKey}:folder:{folder.Key}";
+
+                        items.Add(CreateGroupItem(
+                            sidebarKind,
+                            sidebarGroupName,
+                            sidebarPackageId,
+                            sidebarVersion,
+                            sidebarNamespaceName,
+                            folderKey,
+                            sectionKey,
+                            folder.Key,
+                            "bi-folder",
+                            0));
+
+                        AddMarkdownRoutes(
+                            sidebarKind,
+                            sidebarGroupName,
+                            sidebarPackageId,
+                            sidebarVersion,
+                            sidebarNamespaceName,
+                            folderKey,
+                            routeGroupName,
+                            project,
+                            folder,
+                            items);
+                    }
+                }
+            }
+        }
+
+        private static void AddMarkdownRoutes(
+            string sidebarKind,
+            string sidebarGroupName,
+            string sidebarPackageId,
+            string sidebarVersion,
+            string sidebarNamespaceName,
+            string parentItemKey,
+            string routeGroupName,
+            DocumentationProjectDescriptor project,
+            IEnumerable<DocumentationMarkdownContentItem> markdownItems,
+            List<DocumentationSidebarItem> items
+        )
+        {
+            DocumentationMarkdownContentItem[] orderedItems = markdownItems
+                .OrderBy(item => item.Title, StringComparer.Ordinal)
+                .ToArray();
+
+            for (int index = 0; index < orderedItems.Length; index++)
+            {
+                DocumentationMarkdownContentItem item = orderedItems[index];
+
+                items.Add(CreateRouteItem(
+                    sidebarKind,
+                    sidebarGroupName,
+                    sidebarPackageId,
+                    sidebarVersion,
+                    sidebarNamespaceName,
+                    $"{parentItemKey}:page:{item.Slug}",
+                    parentItemKey,
+                    item.Title,
+                    string.Empty,
+                    "ShowContent",
+                    "DocumentationContent",
+                    routeGroupName,
+                    project.PackageId,
+                    project.Version,
+                    item.SectionTitle,
+                    item.Slug,
+                    index));
+            }
+        }
+
+        private static void AddMcpSidebarItems(
+            string sidebarKind,
+            string sidebarGroupName,
+            string sidebarPackageId,
+            string sidebarVersion,
+            string sidebarNamespaceName,
+            string routeGroupName,
+            string routePackageId,
+            string routeVersion,
+            string routeNamespaceName,
+            List<DocumentationSidebarItem> items
+        )
+        {
+            const string mcpKey = "mcp";
+
+            items.Add(CreateGroupItem(
+                sidebarKind,
+                sidebarGroupName,
+                sidebarPackageId,
+                sidebarVersion,
+                sidebarNamespaceName,
+                mcpKey,
+                string.Empty,
+                "MCP",
+                "bi-plug",
+                900));
+
+            items.Add(CreateRouteItem(
+                sidebarKind,
+                sidebarGroupName,
+                sidebarPackageId,
+                sidebarVersion,
+                sidebarNamespaceName,
+                "mcp:connect-ai-assistant",
+                mcpKey,
+                "Connect an AI assistant",
+                string.Empty,
+                "ShowMcp",
+                routeGroupName,
+                routePackageId,
+                routeVersion,
+                routeNamespaceName,
+                string.Empty,
+                0));
+        }
+
         private static void AddNamespaceSidebarItems(
             string groupName,
             DocumentationProjectItem project,
@@ -252,139 +403,62 @@ namespace DMBDocumentationBuilder
                 items);
         }
 
-        private static void AddProjectSidebarItems(
+        private static void AddObjectGroup(
             string groupName,
             DocumentationProjectItem project,
-            IReadOnlyDictionary<string, DocumentationProjectDescriptor> projectsByKey,
+            DocumentationNamespaceItem ns,
+            string title,
+            string icon,
+            IEnumerable<string> objectNames,
+            int groupSortOrder,
             List<DocumentationSidebarItem> items
         )
         {
-            items.Add(CreateRouteItem(
-                "Project",
-                groupName,
-                project.PackageId,
-                project.Version,
-                string.Empty,
-                "back-to-group",
-                string.Empty,
-                groupName,
-                "bi-arrow-left-circle",
-                "ShowGroup",
-                groupName,
-                string.Empty,
-                project.Version,
-                string.Empty,
-                string.Empty,
-                0));
+            string[] names = objectNames
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
 
-            string projectKey = CreateProjectItemKey(project);
-
-            items.Add(CreateGroupItem(
-                "Project",
-                groupName,
-                project.PackageId,
-                project.Version,
-                string.Empty,
-                projectKey,
-                string.Empty,
-                project.ProjectName,
-                "bi-folder",
-                1));
-
-            AddProjectNamespaceRoutes(
-                "Project",
-                groupName,
-                project.PackageId,
-                project.Version,
-                string.Empty,
-                projectKey,
-                groupName,
-                project,
-                items);
-
-            if (projectsByKey.TryGetValue(CreateProjectLookupKey(groupName, project.PackageId, project.Version), out DocumentationProjectDescriptor? descriptor))
+            if (names.Length == 0)
             {
-                AddMarkdownContentGroups(
-                    "Project",
-                    groupName,
-                    project.PackageId,
-                    project.Version,
-                    string.Empty,
-                    projectKey,
-                    groupName,
-                    descriptor,
-                    items);
-
-                AddOpenApiContentGroups(
-                    "Project",
-                    groupName,
-                    project.PackageId,
-                    project.Version,
-                    string.Empty,
-                    projectKey,
-                    string.Empty,
-                    groupName,
-                    descriptor,
-                    items);
+                return;
             }
 
-            AddMcpSidebarItems(
-                "Project",
-                groupName,
-                project.PackageId,
-                project.Version,
-                string.Empty,
-                groupName,
-                project.PackageId,
-                project.Version,
-                string.Empty,
-                items);
-        }
-
-        private static void AddMcpSidebarItems(
-            string sidebarKind,
-            string sidebarGroupName,
-            string sidebarPackageId,
-            string sidebarVersion,
-            string sidebarNamespaceName,
-            string routeGroupName,
-            string routePackageId,
-            string routeVersion,
-            string routeNamespaceName,
-            List<DocumentationSidebarItem> items
-        )
-        {
-            const string mcpKey = "mcp";
+            string objectGroupKey = $"objects:{title}";
 
             items.Add(CreateGroupItem(
-                sidebarKind,
-                sidebarGroupName,
-                sidebarPackageId,
-                sidebarVersion,
-                sidebarNamespaceName,
-                mcpKey,
+                "Namespace",
+                groupName,
+                project.PackageId,
+                project.Version,
+                ns.NamespaceName,
+                objectGroupKey,
                 string.Empty,
-                "MCP",
-                "bi-plug",
-                900));
+                title,
+                icon,
+                groupSortOrder));
 
-            items.Add(CreateRouteItem(
-                sidebarKind,
-                sidebarGroupName,
-                sidebarPackageId,
-                sidebarVersion,
-                sidebarNamespaceName,
-                "mcp:connect-ai-assistant",
-                mcpKey,
-                "Connect an AI assistant",
-                string.Empty,
-                "ShowMcp",
-                routeGroupName,
-                routePackageId,
-                routeVersion,
-                routeNamespaceName,
-                string.Empty,
-                0));
+            for (int objectIndex = 0; objectIndex < names.Length; objectIndex++)
+            {
+                string objectName = names[objectIndex];
+
+                items.Add(CreateRouteItem(
+                    "Namespace",
+                    groupName,
+                    project.PackageId,
+                    project.Version,
+                    ns.NamespaceName,
+                    $"{objectGroupKey}:{objectName}",
+                    objectGroupKey,
+                    objectName,
+                    string.Empty,
+                    "Show",
+                    groupName,
+                    project.PackageId,
+                    project.Version,
+                    ns.NamespaceName,
+                    objectName,
+                    objectIndex));
+            }
         }
 
         private static void AddOpenApiContentGroups(
@@ -538,221 +612,6 @@ namespace DMBDocumentationBuilder
             }
         }
 
-        private static string GetPrimaryOperationTag(DocumentationOpenApiOperationItem operation)
-        {
-            try
-            {
-                using JsonDocument document = JsonDocument.Parse(operation.TagsJson);
-
-                if (document.RootElement.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (JsonElement tag in document.RootElement.EnumerateArray())
-                    {
-                        if (tag.ValueKind == JsonValueKind.String)
-                        {
-                            string? value = tag.GetString();
-
-                            if (!string.IsNullOrWhiteSpace(value))
-                            {
-                                return value;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (JsonException)
-            {
-                return "Operations";
-            }
-
-            return "Operations";
-        }
-
-        private static void AddMarkdownContentGroups(
-            string sidebarKind,
-            string sidebarGroupName,
-            string sidebarPackageId,
-            string sidebarVersion,
-            string sidebarNamespaceName,
-            string parentItemKey,
-            string routeGroupName,
-            DocumentationProjectDescriptor project,
-            List<DocumentationSidebarItem> items
-        )
-        {
-            IReadOnlyList<DocumentationMarkdownContentItem> markdownItems = DocumentationMarkdownContentScanner.Scan(project);
-
-            int sectionIndex = 0;
-
-            foreach (IGrouping<string, DocumentationMarkdownContentItem> section in markdownItems
-                         .GroupBy(item => item.SectionTitle, StringComparer.Ordinal)
-                         .OrderBy(group => group.Key, StringComparer.Ordinal))
-            {
-                DocumentationMarkdownContentItem first = section.First();
-                string sectionKey = $"{parentItemKey}:markdown:{first.ObjectType}:{first.SectionTitle}";
-
-                items.Add(CreateGroupItem(
-                    sidebarKind,
-                    sidebarGroupName,
-                    sidebarPackageId,
-                    sidebarVersion,
-                    sidebarNamespaceName,
-                    sectionKey,
-                    parentItemKey,
-                    first.SectionTitle,
-                    first.Icon,
-                    100 + sectionIndex++));
-
-                foreach (IGrouping<string, DocumentationMarkdownContentItem> folder in section
-                             .GroupBy(item => item.FolderTitle, StringComparer.Ordinal)
-                             .OrderBy(group => group.Key, StringComparer.Ordinal))
-                {
-                    if (string.IsNullOrWhiteSpace(folder.Key))
-                    {
-                        AddMarkdownRoutes(
-                            sidebarKind,
-                            sidebarGroupName,
-                            sidebarPackageId,
-                            sidebarVersion,
-                            sidebarNamespaceName,
-                            sectionKey,
-                            routeGroupName,
-                            project,
-                            folder,
-                            items);
-                    }
-                    else
-                    {
-                        string folderKey = $"{sectionKey}:folder:{folder.Key}";
-
-                        items.Add(CreateGroupItem(
-                            sidebarKind,
-                            sidebarGroupName,
-                            sidebarPackageId,
-                            sidebarVersion,
-                            sidebarNamespaceName,
-                            folderKey,
-                            sectionKey,
-                            folder.Key,
-                            "bi-folder",
-                            0));
-
-                        AddMarkdownRoutes(
-                            sidebarKind,
-                            sidebarGroupName,
-                            sidebarPackageId,
-                            sidebarVersion,
-                            sidebarNamespaceName,
-                            folderKey,
-                            routeGroupName,
-                            project,
-                            folder,
-                            items);
-                    }
-                }
-            }
-        }
-
-        private static void AddMarkdownRoutes(
-            string sidebarKind,
-            string sidebarGroupName,
-            string sidebarPackageId,
-            string sidebarVersion,
-            string sidebarNamespaceName,
-            string parentItemKey,
-            string routeGroupName,
-            DocumentationProjectDescriptor project,
-            IEnumerable<DocumentationMarkdownContentItem> markdownItems,
-            List<DocumentationSidebarItem> items
-        )
-        {
-            DocumentationMarkdownContentItem[] orderedItems = markdownItems
-                .OrderBy(item => item.Title, StringComparer.Ordinal)
-                .ToArray();
-
-            for (int index = 0; index < orderedItems.Length; index++)
-            {
-                DocumentationMarkdownContentItem item = orderedItems[index];
-
-                items.Add(CreateRouteItem(
-                    sidebarKind,
-                    sidebarGroupName,
-                    sidebarPackageId,
-                    sidebarVersion,
-                    sidebarNamespaceName,
-                    $"{parentItemKey}:page:{item.Slug}",
-                    parentItemKey,
-                    item.Title,
-                    string.Empty,
-                    "ShowContent",
-                    "DocumentationContent",
-                    routeGroupName,
-                    project.PackageId,
-                    project.Version,
-                    item.SectionTitle,
-                    item.Slug,
-                    index));
-            }
-        }
-
-        private static void AddObjectGroup(
-            string groupName,
-            DocumentationProjectItem project,
-            DocumentationNamespaceItem ns,
-            string title,
-            string icon,
-            IEnumerable<string> objectNames,
-            int groupSortOrder,
-            List<DocumentationSidebarItem> items
-        )
-        {
-            string[] names = objectNames
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .ToArray();
-
-            if (names.Length == 0)
-            {
-                return;
-            }
-
-            string objectGroupKey = $"objects:{title}";
-
-            items.Add(CreateGroupItem(
-                "Namespace",
-                groupName,
-                project.PackageId,
-                project.Version,
-                ns.NamespaceName,
-                objectGroupKey,
-                string.Empty,
-                title,
-                icon,
-                groupSortOrder));
-
-            for (int objectIndex = 0; objectIndex < names.Length; objectIndex++)
-            {
-                string objectName = names[objectIndex];
-
-                items.Add(CreateRouteItem(
-                    "Namespace",
-                    groupName,
-                    project.PackageId,
-                    project.Version,
-                    ns.NamespaceName,
-                    $"{objectGroupKey}:{objectName}",
-                    objectGroupKey,
-                    objectName,
-                    string.Empty,
-                    "Show",
-                    groupName,
-                    project.PackageId,
-                    project.Version,
-                    ns.NamespaceName,
-                    objectName,
-                    objectIndex));
-            }
-        }
-
         private static void AddProjectNamespaceRoutes(
             string sidebarKind,
             string sidebarGroupName,
@@ -793,6 +652,95 @@ namespace DMBDocumentationBuilder
             }
         }
 
+        private static void AddProjectSidebarItems(
+            string groupName,
+            DocumentationProjectItem project,
+            IReadOnlyDictionary<string, DocumentationProjectDescriptor> projectsByKey,
+            List<DocumentationSidebarItem> items
+        )
+        {
+            items.Add(CreateRouteItem(
+                "Project",
+                groupName,
+                project.PackageId,
+                project.Version,
+                string.Empty,
+                "back-to-group",
+                string.Empty,
+                groupName,
+                "bi-arrow-left-circle",
+                "ShowGroup",
+                groupName,
+                string.Empty,
+                project.Version,
+                string.Empty,
+                string.Empty,
+                0));
+
+            string projectKey = CreateProjectItemKey(project);
+
+            items.Add(CreateGroupItem(
+                "Project",
+                groupName,
+                project.PackageId,
+                project.Version,
+                string.Empty,
+                projectKey,
+                string.Empty,
+                project.ProjectName,
+                "bi-folder",
+                1));
+
+            AddProjectNamespaceRoutes(
+                "Project",
+                groupName,
+                project.PackageId,
+                project.Version,
+                string.Empty,
+                projectKey,
+                groupName,
+                project,
+                items);
+
+            if (projectsByKey.TryGetValue(CreateProjectLookupKey(groupName, project.PackageId, project.Version), out DocumentationProjectDescriptor? descriptor))
+            {
+                AddMarkdownContentGroups(
+                    "Project",
+                    groupName,
+                    project.PackageId,
+                    project.Version,
+                    string.Empty,
+                    projectKey,
+                    groupName,
+                    descriptor,
+                    items);
+
+                AddOpenApiContentGroups(
+                    "Project",
+                    groupName,
+                    project.PackageId,
+                    project.Version,
+                    string.Empty,
+                    projectKey,
+                    string.Empty,
+                    groupName,
+                    descriptor,
+                    items);
+            }
+
+            AddMcpSidebarItems(
+                "Project",
+                groupName,
+                project.PackageId,
+                project.Version,
+                string.Empty,
+                groupName,
+                project.PackageId,
+                project.Version,
+                string.Empty,
+                items);
+        }
+
         private static void AddRootSidebarItems(DocumentationIndex index, List<DocumentationSidebarItem> items)
         {
             const string groupsKey = "groups";
@@ -827,6 +775,21 @@ namespace DMBDocumentationBuilder
                     string.Empty,
                     indexOfGroup));
             }
+        }
+
+        private static IReadOnlyDictionary<string, DocumentationProjectDescriptor> BuildProjectLookup(IEnumerable<DocumentationGroupDescriptor> groups)
+        {
+            Dictionary<string, DocumentationProjectDescriptor> result = new(StringComparer.Ordinal);
+
+            foreach (DocumentationGroupDescriptor group in groups)
+            {
+                foreach (DocumentationProjectDescriptor project in group.Projects)
+                {
+                    result[CreateProjectLookupKey(group.GroupName, project.PackageId, project.Version)] = project;
+                }
+            }
+
+            return result;
         }
 
         private static IEnumerable<DocumentationSidebarItem> BuildSidebarItems(
@@ -891,30 +854,6 @@ namespace DMBDocumentationBuilder
         private static string CreateProjectItemKey(DocumentationProjectItem project)
         {
             return $"project:{project.PackageId}:{project.Version}:{project.ProjectName}";
-        }
-
-        private static string ResolveLatestGroupVersion(DocumentationGroupItem group)
-        {
-            return group.Projects
-                .Select(project => project.Version)
-                .Where(version => !string.IsNullOrWhiteSpace(version))
-                .OrderByDescending(version => version, DocumentationVersionComparer.Instance)
-                .FirstOrDefault() ?? string.Empty;
-        }
-
-        private static IReadOnlyDictionary<string, DocumentationProjectDescriptor> BuildProjectLookup(IEnumerable<DocumentationGroupDescriptor> groups)
-        {
-            Dictionary<string, DocumentationProjectDescriptor> result = new(StringComparer.Ordinal);
-
-            foreach (DocumentationGroupDescriptor group in groups)
-            {
-                foreach (DocumentationProjectDescriptor project in group.Projects)
-                {
-                    result[CreateProjectLookupKey(group.GroupName, project.PackageId, project.Version)] = project;
-                }
-            }
-
-            return result;
         }
 
         private static string CreateProjectLookupKey(string groupName, string packageId, string version)
@@ -1002,6 +941,65 @@ namespace DMBDocumentationBuilder
                 RouteObjectName = routeObjectName,
                 SortOrder = sortOrder
             };
+        }
+
+        /// <summary>
+        ///     Persists sidebar data for the package versions included in the current generation.
+        /// </summary>
+        /// <param name="index">The documentation index used to build sidebar entries.</param>
+        /// <param name="groups">The documentation group descriptors that own optional Markdown sidebar content.</param>
+        /// <param name="sqliteDatabasePath">The SQLite database path that receives the sidebar entries.</param>
+        public static void GenerateSidebarData(
+            DocumentationIndex index,
+            IEnumerable<DocumentationGroupDescriptor> groups,
+            string sqliteDatabasePath
+        )
+        {
+            if (index is null) throw new ArgumentNullException(nameof(index));
+            if (groups is null) throw new ArgumentNullException(nameof(groups));
+
+            DocumentationDatabaseManager.ReplaceGeneratedSidebarItems(
+                sqliteDatabasePath,
+                BuildSidebarItems(index, groups));
+        }
+
+        private static string GetPrimaryOperationTag(DocumentationOpenApiOperationItem operation)
+        {
+            try
+            {
+                using JsonDocument document = JsonDocument.Parse(operation.TagsJson);
+
+                if (document.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement tag in document.RootElement.EnumerateArray())
+                    {
+                        if (tag.ValueKind == JsonValueKind.String)
+                        {
+                            string? value = tag.GetString();
+
+                            if (!string.IsNullOrWhiteSpace(value))
+                            {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                return "Operations";
+            }
+
+            return "Operations";
+        }
+
+        private static string ResolveLatestGroupVersion(DocumentationGroupItem group)
+        {
+            return group.Projects
+                .Select(project => project.Version)
+                .Where(version => !string.IsNullOrWhiteSpace(version))
+                .OrderByDescending(version => version, DocumentationVersionComparer.Instance)
+                .FirstOrDefault() ?? string.Empty;
         }
 
         #endregion

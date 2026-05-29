@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationStructTechnicalKeywordExtractor.cs create at 2026/04/13 18:04:53
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -16,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationStructTechnicalKeywordExtractor type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationStructTechnicalKeywordExtractor type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationStructTechnicalKeywordExtractor
     {
@@ -41,7 +39,7 @@ namespace DMBDocumentationBuilder
         #region Public methods
 
         /// <summary>
-        /// Extracts documentation keywords and returns them as a comma-separated string.
+        ///     Extracts documentation keywords and returns them as a comma-separated string.
         /// </summary>
         /// <param name="model">The model value used by the documentation generation operation.</param>
         /// <returns>The ExtractKeywordsAsString result produced by DocumentationBuilder generation.</returns>
@@ -51,7 +49,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Extracts ordered documentation keywords from the supplied model or HTML content.
+        ///     Extracts ordered documentation keywords from the supplied model or HTML content.
         /// </summary>
         /// <param name="model">The model value used by the documentation generation operation.</param>
         /// <returns>The ExtractKeywords result produced by DocumentationBuilder generation.</returns>
@@ -77,21 +75,25 @@ namespace DMBDocumentationBuilder
             {
                 Add(keywords, implementedInterface);
             }
+
             foreach (DocumentationStructFieldItem field in model.Fields)
             {
                 Add(keywords, field.FieldName);
                 Add(keywords, field.Signature);
             }
+
             foreach (DocumentationStructPropertyItem property in model.Properties)
             {
                 Add(keywords, property.PropertyName);
                 Add(keywords, property.Signature);
             }
+
             foreach (DocumentationStructMethodItem method in model.Methods)
             {
                 Add(keywords, method.MethodName);
                 Add(keywords, method.Signature);
             }
+
             foreach (DocumentationExtensionMethodItem extensionMethod in model.ExtensionMethods)
             {
                 Add(keywords, extensionMethod.MethodName);
@@ -99,6 +101,7 @@ namespace DMBDocumentationBuilder
                 Add(keywords, extensionMethod.ExtensionNamespaceName);
                 Add(keywords, extensionMethod.Signature);
             }
+
             if (model.IsObsolete)
             {
                 keywords.Add("obsolete");

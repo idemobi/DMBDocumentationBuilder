@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationTypeRegistry.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -20,35 +18,7 @@ namespace DMBDocumentationBuilder
         #region Static methods
 
         /// <summary>
-        /// Builds the set of documented type keys available in a Roslyn compilation.
-        /// </summary>
-        /// <param name="compilation">The compilation value used by the documentation generation operation.</param>
-        /// <returns>The BuildDocumentedTypeKeys result produced by DocumentationBuilder generation.</returns>
-        public static HashSet<string> BuildDocumentedTypeKeys(Compilation compilation)
-        {
-            HashSet<string> result = new(StringComparer.Ordinal);
-
-            void VisitNamespace(INamespaceSymbol ns)
-            {
-                foreach (INamespaceSymbol childNamespace in ns.GetNamespaceMembers()) VisitNamespace(childNamespace);
-
-                foreach (INamedTypeSymbol type in ns.GetTypeMembers()) VisitType(type);
-            }
-
-            void VisitType(INamedTypeSymbol type)
-            {
-                if (!string.IsNullOrWhiteSpace(type.ContainingNamespace?.ToDisplayString())) result.Add(BuildTypeKey(type));
-
-                foreach (INamedTypeSymbol nested in type.GetTypeMembers()) VisitType(nested);
-            }
-
-            VisitNamespace(compilation.Assembly.GlobalNamespace);
-
-            return result;
-        }
-
-        /// <summary>
-        /// Builds an index of documented types with their owning documentation project metadata.
+        ///     Builds an index of documented types with their owning documentation project metadata.
         /// </summary>
         /// <param name="compilation">The compilation value used by the documentation generation operation.</param>
         /// <param name="groups">The documentation groups used to resolve target package and version metadata.</param>
@@ -107,7 +77,35 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Builds the stable documentation key for a Roslyn named type symbol.
+        ///     Builds the set of documented type keys available in a Roslyn compilation.
+        /// </summary>
+        /// <param name="compilation">The compilation value used by the documentation generation operation.</param>
+        /// <returns>The BuildDocumentedTypeKeys result produced by DocumentationBuilder generation.</returns>
+        public static HashSet<string> BuildDocumentedTypeKeys(Compilation compilation)
+        {
+            HashSet<string> result = new(StringComparer.Ordinal);
+
+            void VisitNamespace(INamespaceSymbol ns)
+            {
+                foreach (INamespaceSymbol childNamespace in ns.GetNamespaceMembers()) VisitNamespace(childNamespace);
+
+                foreach (INamedTypeSymbol type in ns.GetTypeMembers()) VisitType(type);
+            }
+
+            void VisitType(INamedTypeSymbol type)
+            {
+                if (!string.IsNullOrWhiteSpace(type.ContainingNamespace?.ToDisplayString())) result.Add(BuildTypeKey(type));
+
+                foreach (INamedTypeSymbol nested in type.GetTypeMembers()) VisitType(nested);
+            }
+
+            VisitNamespace(compilation.Assembly.GlobalNamespace);
+
+            return result;
+        }
+
+        /// <summary>
+        ///     Builds the stable documentation key for a Roslyn named type symbol.
         /// </summary>
         /// <param name="typeSymbol">The typeSymbol value used by the documentation generation operation.</param>
         /// <returns>The BuildTypeKey result produced by DocumentationBuilder generation.</returns>
@@ -119,7 +117,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Determines whether a Roslyn named type symbol is part of the generated documentation set.
+        ///     Determines whether a Roslyn named type symbol is part of the generated documentation set.
         /// </summary>
         /// <param name="typeSymbol">The typeSymbol value used by the documentation generation operation.</param>
         /// <param name="documentedTypeKeys">The documentedTypeKeys value used by the documentation generation operation.</param>
@@ -131,8 +129,19 @@ namespace DMBDocumentationBuilder
             return documentedTypeKeys.Contains(BuildTypeKey(typeSymbol));
         }
 
+        private static bool IsInProjectDirectory(string filePath, string projectDirectory)
+        {
+            string normalizedFilePath = Path.GetFullPath(filePath);
+            string normalizedProjectDirectory = Path.GetFullPath(projectDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            return normalizedFilePath.StartsWith(
+                normalizedProjectDirectory + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
-        /// Attempts to resolve one Roslyn named type to its generated documentation project metadata.
+        ///     Attempts to resolve one Roslyn named type to its generated documentation project metadata.
         /// </summary>
         /// <param name="typeSymbol">The type symbol to resolve.</param>
         /// <param name="documentedTypeIndex">The documented type index used for lookup.</param>
@@ -148,17 +157,6 @@ namespace DMBDocumentationBuilder
             if (typeSymbol is null) return false;
 
             return documentedTypeIndex.TryGetValue(BuildTypeKey(typeSymbol), out item);
-        }
-
-        private static bool IsInProjectDirectory(string filePath, string projectDirectory)
-        {
-            string normalizedFilePath = Path.GetFullPath(filePath);
-            string normalizedProjectDirectory = Path.GetFullPath(projectDirectory)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            return normalizedFilePath.StartsWith(
-                normalizedProjectDirectory + Path.DirectorySeparatorChar,
-                StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool TryResolveProject(

@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationEnumPageManager.cs create at 2026/04/13 12:04:26
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -21,7 +19,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationEnumPageManager type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationEnumPageManager type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationEnumPageManager
     {
@@ -252,11 +250,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Generates documentation artifacts for the configured documentation group and project descriptors.
+        ///     Generates documentation artifacts for the configured documentation group and project descriptors.
         /// </summary>
         /// <param name="groups">The groups value used by the documentation generation operation.</param>
         /// <param name="pageOutputDirectory">The pageOutputDirectory value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
         public static void Generate(
             IEnumerable<DocumentationGroupDescriptor> groups,

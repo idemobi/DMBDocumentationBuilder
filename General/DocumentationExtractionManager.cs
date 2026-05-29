@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationExtractionManager.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -20,7 +18,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationExtractionManager type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationExtractionManager type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationExtractionManager
     {
@@ -32,7 +30,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Builds the project, namespace, and group index used by generated documentation navigation.
+        ///     Builds the project, namespace, and group index used by generated documentation navigation.
         /// </summary>
         /// <param name="groups">The groups value used by the documentation generation operation.</param>
         /// <returns>The BuildIndex result produced by DocumentationBuilder generation.</returns>
@@ -220,7 +218,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Resolves the C# source files compiled by a documented project.
+        ///     Resolves the C# source files compiled by a documented project.
         /// </summary>
         /// <param name="project">The documented project whose source files should be resolved.</param>
         /// <returns>The ordered source file paths used by documentation extraction.</returns>

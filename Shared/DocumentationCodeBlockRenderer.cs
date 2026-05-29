@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationCodeBlockRenderer.cs create at 2026/05/06
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -19,26 +17,45 @@ namespace DMBDocumentationBuilder
 {
     internal static class DocumentationCodeBlockRenderer
     {
-        private static readonly Regex PreCodeRegex = new(
-            "<pre[^>]*>\\s*<code[^>]*>(?<code>[\\s\\S]*?)</code>\\s*</pre>",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private static readonly Regex InlineCodeRegex = new(
-            "<code(?<attributes>[^>]*)>(?<code>[\\s\\S]*?)</code>",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        #region Static fields and properties
 
         private static readonly Regex HtmlTagRegex = new(
             "<[^>]+>",
             RegexOptions.Compiled);
 
+        private static readonly Regex InlineCodeRegex = new(
+            "<code(?<attributes>[^>]*)>(?<code>[\\s\\S]*?)</code>",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex PreCodeRegex = new(
+            "<pre[^>]*>\\s*<code[^>]*>(?<code>[\\s\\S]*?)</code>\\s*</pre>",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        #endregion
+
+        #region Static methods
+
+        private static void AppendToken(StringBuilder builder, string kind, string value)
+        {
+            builder
+                .Append("<span class=\"dmb-code-token-")
+                .Append(kind)
+                .Append("\">")
+                .Append(WebUtility.HtmlEncode(value))
+                .Append("</span>");
+        }
+
+        private static string DecodeCodeText(string encodedCode)
+        {
+            string withoutTags = HtmlTagRegex.Replace(encodedCode, string.Empty);
+            return WebUtility.HtmlDecode(withoutTags) ?? string.Empty;
+        }
+
         internal static string EnhanceCSharpCodeBlocks(string html)
         {
             if (string.IsNullOrWhiteSpace(html)) return html;
 
-            string enhanced = PreCodeRegex.Replace(html, match =>
-            {
-                return RenderBlock(match.Groups["code"].Value, "Declaration", showHeader: true);
-            });
+            string enhanced = PreCodeRegex.Replace(html, match => { return RenderBlock(match.Groups["code"].Value, "Declaration", showHeader: true); });
 
             enhanced = InlineCodeRegex.Replace(enhanced, match =>
             {
@@ -59,94 +76,6 @@ namespace DMBDocumentationBuilder
             });
 
             return enhanced;
-        }
-
-        private static bool LooksLikeCSharpSignature(string encodedCode)
-        {
-            string plainText = DecodeCodeText(encodedCode).Trim();
-
-            if (plainText.Length == 0) return false;
-
-            if (plainText.Contains('(') && plainText.Contains(')')) return true;
-
-            if (Regex.IsMatch(plainText, "\\{\\s*(get|set|init)\\b|\\b(get|set|init)\\s*;", RegexOptions.IgnoreCase)) return true;
-
-            if (plainText.StartsWith("event ", StringComparison.OrdinalIgnoreCase)) return true;
-
-            if (LooksLikeCSharpPropertySignature(plainText)) return true;
-
-            return Regex.IsMatch(
-                plainText,
-                "^(public|private|protected|internal|static|readonly|const|sealed|abstract|virtual|override)\\s+",
-                RegexOptions.IgnoreCase);
-        }
-
-        private static string DecodeCodeText(string encodedCode)
-        {
-            string withoutTags = HtmlTagRegex.Replace(encodedCode, string.Empty);
-            return WebUtility.HtmlDecode(withoutTags) ?? string.Empty;
-        }
-
-        private static bool LooksLikeCSharpPropertySignature(string plainText)
-        {
-            Match signature = Regex.Match(
-                plainText,
-                "^(?<type>[A-Za-z_][A-Za-z0-9_\\.<>\\[\\],? ]+)\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)$",
-                RegexOptions.IgnoreCase);
-
-            if (!signature.Success) return false;
-
-            string memberName = signature.Groups["name"].Value.ToLowerInvariant();
-
-            return !IsCSharpKeyword(memberName);
-        }
-
-        private static string RenderBlock(string encodedCode, string? title, bool showHeader)
-        {
-            string obsoleteClass = encodedCode.Contains("text-decoration-line-through", StringComparison.OrdinalIgnoreCase)
-                ? " text-decoration-line-through text-danger"
-                : string.Empty;
-
-            string rootCompactClass = showHeader ? string.Empty : " dmb-code-block-compact my-2";
-            string preCompactClass = showHeader ? string.Empty : " dmb-code-block-pre-compact";
-
-            string result = "<div class=\"dmb-code-block dmb-code-block-default" + rootCompactClass + "\" " +
-                            "data-code-block=\"true\" " +
-                            "data-code-block-language=\"csharp\" " +
-                            "data-code-block-highlight=\"true\" " +
-                            "data-code-block-line-numbers=\"false\" " +
-                            "data-code-block-theme=\"default\" " +
-                            "data-code-block-state=\"normal\">";
-
-            if (showHeader)
-            {
-                result += "<div class=\"dmb-code-block-header\">" +
-                          "<div class=\"dmb-code-block-meta\">" +
-                          "<span class=\"dmb-code-block-language dmb-code-block-language-icon-only\" title=\"C#\">" +
-                          "<span class=\"bi bi-filetype-cs\" aria-hidden=\"true\"></span>" +
-                          "</span>" +
-                          "<span class=\"dmb-code-block-title\">" + WebUtility.HtmlEncode(title ?? "Code") + "</span>" +
-                          "</div>" +
-                          "<div class=\"dmb-code-block-actions\">" +
-                          "<button type=\"button\" class=\"btn btn-sm btn-outline-secondary dmb-code-block-action dmb-code-block-copy\" data-code-block-copy=\"true\" title=\"Copy code\">" +
-                          "<span class=\"bi bi-clipboard\" aria-hidden=\"true\"></span>" +
-                          "<span class=\"visually-hidden\">Copy code</span>" +
-                          "</button>" +
-                          "</div>" +
-                          "</div>";
-            }
-
-            string codeText = DecodeCodeText(encodedCode);
-
-            result += "<pre class=\"dmb-code-block-pre code-language-csharp" +
-                      preCompactClass +
-                      "\"><code class=\"dmb-code-block-code code-language-csharp" +
-                      obsoleteClass +
-                      "\">" +
-                      WebUtility.HtmlEncode(codeText) +
-                      "</code></pre></div>";
-
-            return result;
         }
 
         private static string HighlightCSharp(string source)
@@ -237,19 +166,32 @@ namespace DMBDocumentationBuilder
             return result.ToString();
         }
 
-        private static void AppendToken(StringBuilder builder, string kind, string value)
+        private static bool IsAsciiLetter(char value)
         {
-            builder
-                .Append("<span class=\"dmb-code-token-")
-                .Append(kind)
-                .Append("\">")
-                .Append(WebUtility.HtmlEncode(value))
-                .Append("</span>");
+            return value is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
         }
 
-        private static bool IsIdentifierStart(char value)
+        private static bool IsCSharpKeyword(string value)
         {
-            return IsAsciiLetter(value) || value is '_' or '@';
+            return value is
+                "abstract" or "as" or "base" or "bool" or "break" or "byte" or "case" or "catch" or "char" or "checked" or
+                "class" or "const" or "continue" or "decimal" or "default" or "delegate" or "do" or "double" or "else" or
+                "enum" or "event" or "explicit" or "extern" or "false" or "finally" or "fixed" or "float" or "for" or
+                "foreach" or "get" or "global" or "goto" or "if" or "implicit" or "in" or "init" or "int" or "interface" or
+                "internal" or "is" or "lock" or "long" or "namespace" or "new" or "null" or "object" or "operator" or
+                "out" or "override" or "params" or "private" or "protected" or "public" or "readonly" or "record" or
+                "ref" or "return" or "sbyte" or "sealed" or "set" or "short" or "sizeof" or "stackalloc" or "static" or
+                "string" or "struct" or "switch" or "this" or "throw" or "true" or "try" or "typeof" or "uint" or
+                "ulong" or "unchecked" or "unsafe" or "ushort" or "using" or "var" or "virtual" or "void" or "volatile" or
+                "while" or "with" or "yield";
+        }
+
+        private static bool IsCSharpType(string value)
+        {
+            return value is
+                "Action" or "Array" or "DateTime" or "DateTimeOffset" or "Dictionary" or "Func" or "Guid" or "HashSet" or
+                "IEnumerable" or "IList" or "IReadOnlyCollection" or "IReadOnlyDictionary" or "IReadOnlyList" or
+                "List" or "Math" or "String" or "Task" or "ValueTask";
         }
 
         private static bool IsIdentifierPart(char value)
@@ -257,9 +199,43 @@ namespace DMBDocumentationBuilder
             return IsAsciiLetter(value) || char.IsDigit(value) || value is '_' or '@';
         }
 
-        private static bool IsAsciiLetter(char value)
+        private static bool IsIdentifierStart(char value)
         {
-            return value is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
+            return IsAsciiLetter(value) || value is '_' or '@';
+        }
+
+        private static bool LooksLikeCSharpPropertySignature(string plainText)
+        {
+            Match signature = Regex.Match(
+                plainText,
+                "^(?<type>[A-Za-z_][A-Za-z0-9_\\.<>\\[\\],? ]+)\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)$",
+                RegexOptions.IgnoreCase);
+
+            if (!signature.Success) return false;
+
+            string memberName = signature.Groups["name"].Value.ToLowerInvariant();
+
+            return !IsCSharpKeyword(memberName);
+        }
+
+        private static bool LooksLikeCSharpSignature(string encodedCode)
+        {
+            string plainText = DecodeCodeText(encodedCode).Trim();
+
+            if (plainText.Length == 0) return false;
+
+            if (plainText.Contains('(') && plainText.Contains(')')) return true;
+
+            if (Regex.IsMatch(plainText, "\\{\\s*(get|set|init)\\b|\\b(get|set|init)\\s*;", RegexOptions.IgnoreCase)) return true;
+
+            if (plainText.StartsWith("event ", StringComparison.OrdinalIgnoreCase)) return true;
+
+            if (LooksLikeCSharpPropertySignature(plainText)) return true;
+
+            return Regex.IsMatch(
+                plainText,
+                "^(public|private|protected|internal|static|readonly|const|sealed|abstract|virtual|override)\\s+",
+                RegexOptions.IgnoreCase);
         }
 
         private static int ReadQuoted(string source, int index, char quote)
@@ -285,27 +261,54 @@ namespace DMBDocumentationBuilder
             return source.Length;
         }
 
-        private static bool IsCSharpKeyword(string value)
+        private static string RenderBlock(string encodedCode, string? title, bool showHeader)
         {
-            return value is
-                "abstract" or "as" or "base" or "bool" or "break" or "byte" or "case" or "catch" or "char" or "checked" or
-                "class" or "const" or "continue" or "decimal" or "default" or "delegate" or "do" or "double" or "else" or
-                "enum" or "event" or "explicit" or "extern" or "false" or "finally" or "fixed" or "float" or "for" or
-                "foreach" or "get" or "global" or "goto" or "if" or "implicit" or "in" or "init" or "int" or "interface" or
-                "internal" or "is" or "lock" or "long" or "namespace" or "new" or "null" or "object" or "operator" or
-                "out" or "override" or "params" or "private" or "protected" or "public" or "readonly" or "record" or
-                "ref" or "return" or "sbyte" or "sealed" or "set" or "short" or "sizeof" or "stackalloc" or "static" or
-                "string" or "struct" or "switch" or "this" or "throw" or "true" or "try" or "typeof" or "uint" or
-                "ulong" or "unchecked" or "unsafe" or "ushort" or "using" or "var" or "virtual" or "void" or "volatile" or
-                "while" or "with" or "yield";
+            string obsoleteClass = encodedCode.Contains("text-decoration-line-through", StringComparison.OrdinalIgnoreCase)
+                ? " text-decoration-line-through text-danger"
+                : string.Empty;
+
+            string rootCompactClass = showHeader ? string.Empty : " dmb-code-block-compact my-2";
+            string preCompactClass = showHeader ? string.Empty : " dmb-code-block-pre-compact";
+
+            string result = "<div class=\"dmb-code-block dmb-code-block-default" + rootCompactClass + "\" " +
+                            "data-code-block=\"true\" " +
+                            "data-code-block-language=\"csharp\" " +
+                            "data-code-block-highlight=\"true\" " +
+                            "data-code-block-line-numbers=\"false\" " +
+                            "data-code-block-theme=\"default\" " +
+                            "data-code-block-state=\"normal\">";
+
+            if (showHeader)
+            {
+                result += "<div class=\"dmb-code-block-header\">" +
+                          "<div class=\"dmb-code-block-meta\">" +
+                          "<span class=\"dmb-code-block-language dmb-code-block-language-icon-only\" title=\"C#\">" +
+                          "<span class=\"bi bi-filetype-cs\" aria-hidden=\"true\"></span>" +
+                          "</span>" +
+                          "<span class=\"dmb-code-block-title\">" + WebUtility.HtmlEncode(title ?? "Code") + "</span>" +
+                          "</div>" +
+                          "<div class=\"dmb-code-block-actions\">" +
+                          "<button type=\"button\" class=\"btn btn-sm btn-outline-secondary dmb-code-block-action dmb-code-block-copy\" data-code-block-copy=\"true\" title=\"Copy code\">" +
+                          "<span class=\"bi bi-clipboard\" aria-hidden=\"true\"></span>" +
+                          "<span class=\"visually-hidden\">Copy code</span>" +
+                          "</button>" +
+                          "</div>" +
+                          "</div>";
+            }
+
+            string codeText = DecodeCodeText(encodedCode);
+
+            result += "<pre class=\"dmb-code-block-pre code-language-csharp" +
+                      preCompactClass +
+                      "\"><code class=\"dmb-code-block-code code-language-csharp" +
+                      obsoleteClass +
+                      "\">" +
+                      WebUtility.HtmlEncode(codeText) +
+                      "</code></pre></div>";
+
+            return result;
         }
 
-        private static bool IsCSharpType(string value)
-        {
-            return value is
-                "Action" or "Array" or "DateTime" or "DateTimeOffset" or "Dictionary" or "Func" or "Guid" or "HashSet" or
-                "IEnumerable" or "IList" or "IReadOnlyCollection" or "IReadOnlyDictionary" or "IReadOnlyList" or
-                "List" or "Math" or "String" or "Task" or "ValueTask";
-        }
+        #endregion
     }
 }

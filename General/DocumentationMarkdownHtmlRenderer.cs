@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationMarkdownHtmlRenderer.cs create at 2026/05/18 22:05:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -18,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Renders DocumentationBuilder Markdown content into safe HTML.
+    ///     Renders DocumentationBuilder Markdown content into safe HTML.
     /// </summary>
     public static class DocumentationMarkdownHtmlRenderer
     {
@@ -33,8 +31,29 @@ namespace DMBDocumentationBuilder
 
         #region Static methods
 
+        private static int GetHeadingLevel(string line)
+        {
+            int count = 0;
+
+            while (count < line.Length && line[count] == '#')
+            {
+                count++;
+            }
+
+            return count is > 0 and <= 6 &&
+                   count < line.Length &&
+                   line[count] == ' '
+                ? count
+                : 0;
+        }
+
+        private static string Html(string? value)
+        {
+            return WebUtility.HtmlEncode(value ?? string.Empty);
+        }
+
         /// <summary>
-        /// Renders Markdown text into the HTML subset used by generated documentation pages.
+        ///     Renders Markdown text into the HTML subset used by generated documentation pages.
         /// </summary>
         /// <param name="markdown">The Markdown text to render.</param>
         /// <returns>The rendered HTML content.</returns>
@@ -166,27 +185,6 @@ namespace DMBDocumentationBuilder
             }
 
             return html.ToString();
-        }
-
-        private static int GetHeadingLevel(string line)
-        {
-            int count = 0;
-
-            while (count < line.Length && line[count] == '#')
-            {
-                count++;
-            }
-
-            return count is > 0 and <= 6 &&
-                   count < line.Length &&
-                   line[count] == ' '
-                ? count
-                : 0;
-        }
-
-        private static string Html(string? value)
-        {
-            return WebUtility.HtmlEncode(value ?? string.Empty);
         }
 
         private static string RenderInline(string value)

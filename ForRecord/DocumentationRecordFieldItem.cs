@@ -1,55 +1,61 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationRecordFieldItem.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationRecordFieldItem type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationRecordFieldItem type used by DocumentationBuilder generation.
     /// </summary>
     public sealed class DocumentationRecordFieldItem
     {
         #region Instance fields and properties
 
         /// <summary>
-        /// Gets or sets the Accessibility value used by generated documentation.
+        ///     Gets or sets the Accessibility value used by generated documentation.
         /// </summary>
         public string Accessibility { get; init; } = string.Empty;
+
         /// <summary>
-        /// Gets or sets the FieldName value used by generated documentation.
+        ///     Gets or sets the FieldName value used by generated documentation.
         /// </summary>
         public string FieldName { get; init; } = string.Empty;
+
         /// <summary>
-        /// Gets or sets the IsConst value used by generated documentation.
+        ///     Gets or sets the IsConst value used by generated documentation.
         /// </summary>
         public bool IsConst { get; init; }
+
         /// <summary>
-        /// Gets or sets the IsObsolete value used by generated documentation.
+        ///     Gets or sets the IsObsolete value used by generated documentation.
         /// </summary>
         public bool IsObsolete { get; init; }
+
         /// <summary>
-        /// Gets or sets the IsReadOnly value used by generated documentation.
+        ///     Gets or sets the IsReadOnly value used by generated documentation.
         /// </summary>
         public bool IsReadOnly { get; init; }
+
         /// <summary>
-        /// Gets or sets the IsStatic value used by generated documentation.
+        ///     Gets or sets the IsStatic value used by generated documentation.
         /// </summary>
         public bool IsStatic { get; init; }
+
         /// <summary>
-        /// Gets or sets the ObsoleteMessage value used by generated documentation.
+        ///     Gets or sets the ObsoleteMessage value used by generated documentation.
         /// </summary>
         public string ObsoleteMessage { get; init; } = string.Empty;
+
         /// <summary>
-        /// Gets or sets the Signature value used by generated documentation.
+        ///     Gets or sets the Signature value used by generated documentation.
         /// </summary>
         public string Signature { get; init; } = string.Empty;
+
         /// <summary>
-        /// Gets the collection used by DocumentationBuilder generation.
+        ///     Gets the collection used by DocumentationBuilder generation.
         /// </summary>
         public DocumentationXmlModel XmlDoc { get; init; } = new();
 

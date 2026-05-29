@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationLauncher.cs create at 2026/04/13 12:04:26
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -17,19 +15,23 @@ using System.Xml.Linq;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Coordinates DocumentationBuilder cleanup and generation for a target website project.
+    ///     Coordinates DocumentationBuilder cleanup and generation for a target website project.
     /// </summary>
     public static class DocumentationLauncher
     {
         #region Static methods
 
         /// <summary>
-        /// Removes generated documentation artifacts from a target website project.
+        ///     Removes generated documentation artifacts from a target website project.
         /// </summary>
-        /// <param name="websiteProjectRelativePath">The relative or absolute path to the website project that hosts generated documentation.</param>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="websiteProjectRelativePath"/> is empty.</exception>
+        /// <param name="websiteProjectRelativePath">
+        ///     The relative or absolute path to the website project that hosts generated
+        ///     documentation.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="websiteProjectRelativePath" /> is empty.</exception>
         /// <remarks>
-        /// The cleanup removes generated documentation folders and reverses generated registration snippets from the host project.
+        ///     The cleanup removes generated documentation folders and reverses generated registration snippets from the host
+        ///     project.
         /// </remarks>
         public static void Clean(string websiteProjectRelativePath)
         {
@@ -129,7 +131,7 @@ namespace DMBDocumentationBuilder
                                 file.Content
                             );
                         }
-                        
+
                         string fullPath = project.ProjectFilePath;
                         string lastValidDir = "unknown";
                         string[] pathParts = fullPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -416,16 +418,20 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Generates documentation pages, sidebar source, and SQLite metadata for the provided documentation groups.
+        ///     Generates documentation pages, sidebar source, and SQLite metadata for the provided documentation groups.
         /// </summary>
-        /// <param name="websiteProjectRelativePath">The relative or absolute path to the website project that will receive generated documentation.</param>
+        /// <param name="websiteProjectRelativePath">
+        ///     The relative or absolute path to the website project that will receive
+        ///     generated documentation.
+        /// </param>
         /// <param name="groups">The documentation group descriptors that identify projects and grouping metadata to generate.</param>
         /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="websiteProjectRelativePath"/> is empty or when <paramref name="groups"/> is empty.
+        ///     Thrown when <paramref name="websiteProjectRelativePath" /> is empty or when <paramref name="groups" /> is empty.
         /// </exception>
         /// <remarks>
-        /// Generation creates or updates documentation directories, the documentation SQLite database, sidebar provider source,
-        /// group and namespace pages, and type pages for classes, records, structs, interfaces, and enums.
+        ///     Generation creates or updates documentation directories, the documentation SQLite database, sidebar provider
+        ///     source,
+        ///     group and namespace pages, and type pages for classes, records, structs, interfaces, and enums.
         /// </remarks>
         public static void Run(
             string websiteProjectRelativePath,

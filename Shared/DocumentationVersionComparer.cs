@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationVersionComparer.cs create at 2026/05/20
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -14,42 +12,9 @@ namespace DMBDocumentationBuilder
         #region Static fields and properties
 
         /// <summary>
-        /// Gets the shared comparer instance used to order documentation versions.
+        ///     Gets the shared comparer instance used to order documentation versions.
         /// </summary>
         public static readonly DocumentationVersionComparer Instance = new();
-
-        #endregion
-
-        #region Instance methods
-
-        /// <summary>
-        /// Compares two documentation version labels using numeric version parts first and ordinal text as a fallback.
-        /// </summary>
-        /// <param name="x">The first version label to compare.</param>
-        /// <param name="y">The second version label to compare.</param>
-        /// <returns>A signed integer that indicates the relative order of <paramref name="x"/> and <paramref name="y"/>.</returns>
-        public int Compare(string? x, string? y)
-        {
-            if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase))
-            {
-                return 0;
-            }
-
-            int[] xParts = ParseVersionParts(x);
-            int[] yParts = ParseVersionParts(y);
-
-            for (int index = 0; index < xParts.Length; index++)
-            {
-                int partComparison = xParts[index].CompareTo(yParts[index]);
-
-                if (partComparison != 0)
-                {
-                    return partComparison;
-                }
-            }
-
-            return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
-        }
 
         #endregion
 
@@ -91,6 +56,43 @@ namespace DMBDocumentationBuilder
 
             return parts;
         }
+
+        #endregion
+
+        #region Instance methods
+
+        #region From interface IComparer<string>
+
+        /// <summary>
+        ///     Compares two documentation version labels using numeric version parts first and ordinal text as a fallback.
+        /// </summary>
+        /// <param name="x">The first version label to compare.</param>
+        /// <param name="y">The second version label to compare.</param>
+        /// <returns>A signed integer that indicates the relative order of <paramref name="x" /> and <paramref name="y" />.</returns>
+        public int Compare(string? x, string? y)
+        {
+            if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+
+            int[] xParts = ParseVersionParts(x);
+            int[] yParts = ParseVersionParts(y);
+
+            for (int index = 0; index < xParts.Length; index++)
+            {
+                int partComparison = xParts[index].CompareTo(yParts[index]);
+
+                if (partComparison != 0)
+                {
+                    return partComparison;
+                }
+            }
+
+            return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
 
         #endregion
     }

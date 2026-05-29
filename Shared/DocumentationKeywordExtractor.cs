@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationKeywordExtractor.cs create at 2026/04/13 17:04:54
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -17,7 +15,7 @@ using System.Text.RegularExpressions;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationKeywordExtractor type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationKeywordExtractor type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationKeywordExtractor
     {
@@ -42,7 +40,7 @@ namespace DMBDocumentationBuilder
         #region Public methods
 
         /// <summary>
-        /// Extracts documentation keywords and returns them as a comma-separated string.
+        ///     Extracts documentation keywords and returns them as a comma-separated string.
         /// </summary>
         /// <param name="html">The html value used by the documentation generation operation.</param>
         /// <returns>The ExtractKeywordsAsString result produced by DocumentationBuilder generation.</returns>
@@ -52,7 +50,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Extracts ordered documentation keywords from the supplied model or HTML content.
+        ///     Extracts ordered documentation keywords from the supplied model or HTML content.
         /// </summary>
         /// <param name="html">The html value used by the documentation generation operation.</param>
         /// <returns>The ExtractKeywords result produced by DocumentationBuilder generation.</returns>

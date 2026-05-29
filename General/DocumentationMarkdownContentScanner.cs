@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationMarkdownContentScanner.cs create at 2026/05/18 22:05:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -16,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Scans Markdown content folders used by DocumentationBuilder.
+    ///     Scans Markdown content folders used by DocumentationBuilder.
     /// </summary>
     public static class DocumentationMarkdownContentScanner
     {
@@ -28,8 +26,30 @@ namespace DMBDocumentationBuilder
 
         #region Static methods
 
+        private static string BuildSlug(IReadOnlyList<string> pathParts)
+        {
+            return string.Join(
+                "/",
+                pathParts.Select(part => Slugify(Path.GetFileNameWithoutExtension(part))));
+        }
+
+        private static string ReadTitle(string filePath)
+        {
+            foreach (string line in File.ReadLines(filePath))
+            {
+                string trimmed = line.Trim();
+
+                if (trimmed.StartsWith("# ", StringComparison.Ordinal))
+                {
+                    return trimmed[2..].Trim();
+                }
+            }
+
+            return string.Empty;
+        }
+
         /// <summary>
-        /// Reads Markdown content items from the configured project folders.
+        ///     Reads Markdown content items from the configured project folders.
         /// </summary>
         /// <param name="project">The project whose Markdown folders should be scanned.</param>
         /// <returns>The Markdown content items found in configured folders.</returns>
@@ -80,28 +100,6 @@ namespace DMBDocumentationBuilder
                 .ThenBy(item => item.FolderTitle, StringComparer.Ordinal)
                 .ThenBy(item => item.Title, StringComparer.Ordinal)
                 .ToArray();
-        }
-
-        private static string BuildSlug(IReadOnlyList<string> pathParts)
-        {
-            return string.Join(
-                "/",
-                pathParts.Select(part => Slugify(Path.GetFileNameWithoutExtension(part))));
-        }
-
-        private static string ReadTitle(string filePath)
-        {
-            foreach (string line in File.ReadLines(filePath))
-            {
-                string trimmed = line.Trim();
-
-                if (trimmed.StartsWith("# ", StringComparison.Ordinal))
-                {
-                    return trimmed[2..].Trim();
-                }
-            }
-
-            return string.Empty;
         }
 
         private static string Slugify(string value)

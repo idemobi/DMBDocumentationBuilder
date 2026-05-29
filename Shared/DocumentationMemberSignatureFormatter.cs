@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationMemberSignatureFormatter.cs create at 2026/05/18 00:00:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -42,49 +40,6 @@ namespace DMBDocumentationBuilder.Shared
         #endregion
 
         #region Static methods
-
-        internal static string FormatEvent(IEventSymbol eventSymbol)
-        {
-            return EnsureLeadingModifiers(
-                eventSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
-                BuildModifiers(eventSymbol));
-        }
-
-        internal static string FormatField(IFieldSymbol fieldSymbol)
-        {
-            List<string> modifiers = BuildModifiers(fieldSymbol);
-
-            if (fieldSymbol.IsConst)
-            {
-                AddModifier(modifiers, "const");
-            }
-            else
-            {
-                if (fieldSymbol.IsReadOnly) AddModifier(modifiers, "readonly");
-            }
-
-            return EnsureLeadingModifiers(
-                fieldSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
-                modifiers);
-        }
-
-        internal static string FormatMethod(IMethodSymbol methodSymbol)
-        {
-            return EnsureLeadingModifiers(
-                methodSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
-                BuildModifiers(methodSymbol));
-        }
-
-        internal static string FormatProperty(IPropertySymbol propertySymbol)
-        {
-            string signature = EnsureLeadingModifiers(
-                propertySymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
-                BuildModifiers(propertySymbol));
-
-            if (signature.Contains("{", StringComparison.Ordinal)) return signature;
-
-            return $"{signature} {FormatPropertyAccessors(propertySymbol)}";
-        }
 
         private static void AddAccessibility(List<string> modifiers, ISymbol symbol)
         {
@@ -201,6 +156,49 @@ namespace DMBDocumentationBuilder.Shared
             }
 
             return $"{accessorAccessibility} {keyword};";
+        }
+
+        internal static string FormatEvent(IEventSymbol eventSymbol)
+        {
+            return EnsureLeadingModifiers(
+                eventSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
+                BuildModifiers(eventSymbol));
+        }
+
+        internal static string FormatField(IFieldSymbol fieldSymbol)
+        {
+            List<string> modifiers = BuildModifiers(fieldSymbol);
+
+            if (fieldSymbol.IsConst)
+            {
+                AddModifier(modifiers, "const");
+            }
+            else
+            {
+                if (fieldSymbol.IsReadOnly) AddModifier(modifiers, "readonly");
+            }
+
+            return EnsureLeadingModifiers(
+                fieldSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
+                modifiers);
+        }
+
+        internal static string FormatMethod(IMethodSymbol methodSymbol)
+        {
+            return EnsureLeadingModifiers(
+                methodSymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
+                BuildModifiers(methodSymbol));
+        }
+
+        internal static string FormatProperty(IPropertySymbol propertySymbol)
+        {
+            string signature = EnsureLeadingModifiers(
+                propertySymbol.ToDisplayString(DocumentationSymbolDisplayFormat.SignatureFormat),
+                BuildModifiers(propertySymbol));
+
+            if (signature.Contains("{", StringComparison.Ordinal)) return signature;
+
+            return $"{signature} {FormatPropertyAccessors(propertySymbol)}";
         }
 
         private static string FormatPropertyAccessors(IPropertySymbol propertySymbol)

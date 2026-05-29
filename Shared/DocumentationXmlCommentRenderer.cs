@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationXmlCommentRenderer.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -43,7 +41,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Extracts structured documentation metadata from XML comments or project context inputs.
+        ///     Extracts structured documentation metadata from XML comments or project context inputs.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -177,6 +175,22 @@ namespace DMBDocumentationBuilder
             return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
         }
 
+        private static string NormalizeCrefTypeName(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) return string.Empty;
+
+            string withoutGenericArguments = StripGenericArguments(typeName);
+
+            string[] parts = withoutGenericArguments.Split('.');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                int genericTickIndex = parts[i].IndexOf('`');
+                if (genericTickIndex >= 0) parts[i] = parts[i][..genericTickIndex];
+            }
+
+            return string.Join(".", parts);
+        }
+
         private static string NormalizeHtmlSpacing(string html)
         {
             if (string.IsNullOrWhiteSpace(html)) return string.Empty;
@@ -193,22 +207,6 @@ namespace DMBDocumentationBuilder
             normalized = normalized.Replace(" </a>", "</a>", StringComparison.Ordinal);
 
             return normalized.Trim();
-        }
-
-        private static string NormalizeCrefTypeName(string typeName)
-        {
-            if (string.IsNullOrWhiteSpace(typeName)) return string.Empty;
-
-            string withoutGenericArguments = StripGenericArguments(typeName);
-
-            string[] parts = withoutGenericArguments.Split('.');
-            for (int i = 0; i < parts.Length; i++)
-            {
-                int genericTickIndex = parts[i].IndexOf('`');
-                if (genericTickIndex >= 0) parts[i] = parts[i][..genericTickIndex];
-            }
-
-            return string.Join(".", parts);
         }
 
         private static CrefTarget? ParseCref(string cref, Compilation compilation, INamedTypeSymbol currentTypeSymbol)
@@ -310,31 +308,6 @@ namespace DMBDocumentationBuilder
             };
         }
 
-        private static string StripGenericArguments(string value)
-        {
-            StringBuilder sb = new();
-            int depth = 0;
-
-            foreach (char current in value)
-            {
-                if (current == '{')
-                {
-                    depth++;
-                    continue;
-                }
-
-                if (current == '}')
-                {
-                    if (depth > 0) depth--;
-                    continue;
-                }
-
-                if (depth == 0) sb.Append(current);
-            }
-
-            return sb.ToString();
-        }
-
         private static string RenderCodeBlock(XElement element)
         {
             string code = element.Value
@@ -405,7 +378,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the XML documentation example section as safe HTML.
+        ///     Renders the XML documentation example section as safe HTML.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -428,7 +401,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders XML documentation exception entries as named documentation items.
+        ///     Renders XML documentation exception entries as named documentation items.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -550,7 +523,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders XML documentation parameter entries as named documentation items.
+        ///     Renders XML documentation parameter entries as named documentation items.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -572,7 +545,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the XML documentation remarks section as safe HTML.
+        ///     Renders the XML documentation remarks section as safe HTML.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -595,7 +568,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the XML documentation returns section as safe HTML.
+        ///     Renders the XML documentation returns section as safe HTML.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -703,7 +676,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders XML documentation see-also entries as generated documentation links.
+        ///     Renders XML documentation see-also entries as generated documentation links.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -744,7 +717,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the XML documentation summary section as safe HTML.
+        ///     Renders the XML documentation summary section as safe HTML.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -767,7 +740,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders XML documentation type parameter entries as named documentation items.
+        ///     Renders XML documentation type parameter entries as named documentation items.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -789,7 +762,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the XML documentation value section as safe HTML.
+        ///     Renders the XML documentation value section as safe HTML.
         /// </summary>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
@@ -809,6 +782,31 @@ namespace DMBDocumentationBuilder
         {
             string value = Extract(packageId, version, groupName, symbol, compilation, currentTypeSymbol).ValueHtml;
             return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+
+        private static string StripGenericArguments(string value)
+        {
+            StringBuilder sb = new();
+            int depth = 0;
+
+            foreach (char current in value)
+            {
+                if (current == '{')
+                {
+                    depth++;
+                    continue;
+                }
+
+                if (current == '}')
+                {
+                    if (depth > 0) depth--;
+                    continue;
+                }
+
+                if (depth == 0) sb.Append(current);
+            }
+
+            return sb.ToString();
         }
 
         private static XDocument? TryGetDocumentationDocument(ISymbol symbol)
@@ -838,27 +836,32 @@ namespace DMBDocumentationBuilder
             #region Instance fields and properties
 
             /// <summary>
-            /// Gets or sets the Anchor value used by generated documentation.
+            ///     Gets or sets the Anchor value used by generated documentation.
             /// </summary>
             public string? Anchor { get; init; }
+
             /// <summary>
-            /// Gets or sets the IsIntraPage value used by generated documentation.
+            ///     Gets or sets the IsIntraPage value used by generated documentation.
             /// </summary>
             public required bool IsIntraPage { get; init; }
+
             /// <summary>
-            /// Gets or sets the IsKeyword value used by generated documentation.
+            ///     Gets or sets the IsKeyword value used by generated documentation.
             /// </summary>
             public required bool IsKeyword { get; init; }
+
             /// <summary>
-            /// Gets or sets the Label value used by generated documentation.
+            ///     Gets or sets the Label value used by generated documentation.
             /// </summary>
             public required string Label { get; init; }
+
             /// <summary>
-            /// Gets or sets the NamespaceName value used by generated documentation.
+            ///     Gets or sets the NamespaceName value used by generated documentation.
             /// </summary>
             public required string NamespaceName { get; init; }
+
             /// <summary>
-            /// Gets or sets the ObjectName value used by generated documentation.
+            ///     Gets or sets the ObjectName value used by generated documentation.
             /// </summary>
             public required string ObjectName { get; init; }
 

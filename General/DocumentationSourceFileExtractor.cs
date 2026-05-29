@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationSourceFileExtractor.cs create at 2026/05/21 00:00:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -19,14 +17,20 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Extracts C# source file snapshots for DocumentationViewer MCP source-code tools.
+    ///     Extracts C# source file snapshots for DocumentationViewer MCP source-code tools.
     /// </summary>
     public static class DocumentationSourceFileExtractor
     {
         #region Static methods
 
+        private static string ComputeSha256(string content)
+        {
+            byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content));
+            return Convert.ToHexString(hash).ToLowerInvariant();
+        }
+
         /// <summary>
-        /// Extracts source file metadata and content for one documented project.
+        ///     Extracts source file metadata and content for one documented project.
         /// </summary>
         /// <param name="project">The documented project whose C# compile items should be captured.</param>
         /// <returns>The source file snapshots ordered by relative file path.</returns>
@@ -69,12 +73,6 @@ namespace DMBDocumentationBuilder
             return items
                 .OrderBy(item => item.RelativeFilePath, StringComparer.Ordinal)
                 .ToArray();
-        }
-
-        private static string ComputeSha256(string content)
-        {
-            byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content));
-            return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
         private static IReadOnlyList<string> ExtractNamespaceNames(SyntaxNode root)

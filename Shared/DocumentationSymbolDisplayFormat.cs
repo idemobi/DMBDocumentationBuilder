@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationSymbolDisplayFormat.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -20,7 +18,7 @@ namespace DMBDocumentationBuilder.Shared
         #region Static fields and properties
 
         /// <summary>
-        /// Gets the Roslyn symbol display format used for generated member signatures.
+        ///     Gets the Roslyn symbol display format used for generated member signatures.
         /// </summary>
         public static readonly SymbolDisplayFormat SignatureFormat = SymbolDisplayFormat.MinimallyQualifiedFormat
             .WithMemberOptions(

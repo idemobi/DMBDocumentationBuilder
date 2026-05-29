@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationDatabaseManager.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -17,22 +15,97 @@ using Microsoft.Data.Sqlite;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationDatabaseManager type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationDatabaseManager type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationDatabaseManager
     {
         #region Static fields and properties
 
-        private static readonly object TableCreationLock = new();
-
         private static readonly HashSet<string> TableCreatedDatabasePaths = new(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly object TableCreationLock = new();
 
         #endregion
 
         #region Static methods
 
         /// <summary>
-        /// Ensures that the SQLite documentation metadata schema exists.
+        ///     Deletes imported OpenAPI documents and operation indexes for one package version.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The SQLite database path that contains OpenAPI records.</param>
+        /// <param name="packageId">The package identifier whose OpenAPI records should be deleted.</param>
+        /// <param name="version">The package version whose OpenAPI records should be deleted.</param>
+        public static void DeleteOpenApiDocuments(
+            string sqliteDatabasePath,
+            string packageId,
+            string version
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            using SqliteTransaction transaction = connection.BeginTransaction();
+
+            using (SqliteCommand deleteOperationsCommand = connection.CreateCommand())
+            {
+                deleteOperationsCommand.Transaction = transaction;
+                deleteOperationsCommand.CommandText = """
+                                                      DELETE FROM DocumentationOpenApiOperations
+                                                      WHERE PackageId = @PackageId
+                                                        AND Version = @Version
+                                                      """;
+                deleteOperationsCommand.Parameters.AddWithValue("@PackageId", packageId);
+                deleteOperationsCommand.Parameters.AddWithValue("@Version", version);
+                deleteOperationsCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand deleteDocumentsCommand = connection.CreateCommand())
+            {
+                deleteDocumentsCommand.Transaction = transaction;
+                deleteDocumentsCommand.CommandText = """
+                                                     DELETE FROM DocumentationOpenApiDocuments
+                                                     WHERE PackageId = @PackageId
+                                                       AND Version = @Version
+                                                     """;
+                deleteDocumentsCommand.Parameters.AddWithValue("@PackageId", packageId);
+                deleteDocumentsCommand.Parameters.AddWithValue("@Version", version);
+                deleteDocumentsCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+
+        private static void EnsureColumnExists(
+            SqliteConnection connection,
+            string tableName,
+            string columnName,
+            string columnDefinition
+        )
+        {
+            using (SqliteCommand checkCommand = connection.CreateCommand())
+            {
+                checkCommand.CommandText = $"PRAGMA table_info({tableName})";
+
+                using SqliteDataReader reader = checkCommand.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    if (string.Equals(reader["name"]?.ToString(), columnName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            using SqliteCommand alterCommand = connection.CreateCommand();
+            alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition}";
+            alterCommand.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        ///     Ensures that the SQLite documentation metadata schema exists.
         /// </summary>
         /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
         public static void EnsureTableCreated(string sqliteDatabasePath)
@@ -308,242 +381,8 @@ namespace DMBDocumentationBuilder
             }
         }
 
-        private static void EnsureColumnExists(
-            SqliteConnection connection,
-            string tableName,
-            string columnName,
-            string columnDefinition
-        )
-        {
-            using (SqliteCommand checkCommand = connection.CreateCommand())
-            {
-                checkCommand.CommandText = $"PRAGMA table_info({tableName})";
-
-                using SqliteDataReader reader = checkCommand.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    if (string.Equals(reader["name"]?.ToString(), columnName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return;
-                    }
-                }
-            }
-
-            using SqliteCommand alterCommand = connection.CreateCommand();
-            alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition}";
-            alterCommand.ExecuteNonQuery();
-        }
-
         /// <summary>
-        /// Saves generated documentation object metadata and rendered content to SQLite.
-        /// </summary>
-        /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
-        /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
-        /// <param name="version">The version value used by the documentation generation operation.</param>
-        /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>
-        /// <param name="objectName">The objectName value used by the documentation generation operation.</param>
-        /// <param name="objectType">The objectType value used by the documentation generation operation.</param>
-        /// <param name="model">The model value used by the documentation generation operation.</param>
-        /// <param name="htmlContent">The htmlContent value used by the documentation generation operation.</param>
-        /// <param name="technicalKeywords">The technicalKeywords value used by the documentation generation operation.</param>
-        /// <param name="keywords">The keywords value used by the documentation generation operation.</param>
-        /// <param name="routePath">The routePath value used by the documentation generation operation.</param>
-        public static void SaveObject(
-            string sqliteDatabasePath,
-            string packageId,
-            string version,
-            string namespaceName,
-            string objectName,
-            string objectType,
-            object model,
-            string htmlContent,
-            string technicalKeywords,
-            string keywords,
-            string routePath
-        )
-        {
-            EnsureTableCreated(sqliteDatabasePath);
-
-            string modelJson = JsonSerializer.Serialize(model);
-            string nowUtc = DateTime.UtcNow.ToString("O");
-
-            using (var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}"))
-            {
-                connection.Open();
-
-                if (string.Equals(objectType, "Group", StringComparison.Ordinal) &&
-                    string.IsNullOrWhiteSpace(packageId) &&
-                    !string.IsNullOrWhiteSpace(version))
-                {
-                    using var deleteLegacyGroupCommand = new SqliteCommand(
-                        """
-                        DELETE FROM DocumentationObjects
-                        WHERE PackageId = ''
-                          AND Version = ''
-                          AND NamespaceName = ''
-                          AND ObjectName = @ObjectName
-                          AND ObjectType = 'Group';
-                        """,
-                        connection);
-                    deleteLegacyGroupCommand.Parameters.AddWithValue("@ObjectName", objectName);
-                    deleteLegacyGroupCommand.ExecuteNonQuery();
-                }
-
-                string insertSql = @"
-                INSERT INTO DocumentationObjects 
-                (PackageId, Version, NamespaceName, ObjectName, ObjectType, RoutePath, ModelInJson, HtmlContent, TechnicalKeywords, Keywords, CreatedUtc, UpdatedUtc, Builder)
-                VALUES (@PackageId, @Version, @NamespaceName, @ObjectName, @ObjectType, @RoutePath, @ModelInJson, @HtmlContent, @TechnicalKeywords, @Keywords, @CreatedUtc, @UpdatedUtc, @Builder)
-                ON CONFLICT(PackageId, Version, NamespaceName, ObjectName, ObjectType) DO UPDATE SET
-                    RoutePath = excluded.RoutePath,
-                    ModelInJson = excluded.ModelInJson,
-                    HtmlContent = excluded.HtmlContent,
-                    TechnicalKeywords = excluded.TechnicalKeywords,
-                    Keywords = excluded.Keywords,
-                    UpdatedUtc = excluded.UpdatedUtc,
-                    Builder = excluded.Builder;";
-
-                using (var command = new SqliteCommand(insertSql, connection))
-                {
-                    command.Parameters.AddWithValue("@PackageId", packageId);
-                    command.Parameters.AddWithValue("@Version", version);
-                    command.Parameters.AddWithValue("@NamespaceName", namespaceName);
-                    command.Parameters.AddWithValue("@ObjectName", objectName);
-                    command.Parameters.AddWithValue("@ObjectType", objectType);
-                    command.Parameters.AddWithValue("@ModelInJson", modelJson);
-                    command.Parameters.AddWithValue("@HtmlContent", htmlContent);
-                    command.Parameters.AddWithValue("@TechnicalKeywords", technicalKeywords);
-                    command.Parameters.AddWithValue("@Keywords", keywords);
-                    command.Parameters.AddWithValue("@RoutePath", routePath);
-                    command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
-                    command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
-                    command.Parameters.AddWithValue("@Builder", DocumentationVisualHelper.DocumentationBuilderVersion);
-
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqliteException e)
-                    {
-                        Console.WriteLine($"[DEBUG_LOG] Error saving object: {packageId} v{version} - {namespaceName}.{objectName} ({objectType})");
-                        Console.WriteLine($"[DEBUG_LOG] RoutePath: {routePath}");
-                        Console.WriteLine($"[DEBUG_LOG] SQLite Error: {e.Message}");
-                        throw;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Replaces granular member metadata for one generated documentation object.
-        /// </summary>
-        /// <param name="sqliteDatabasePath">The SQLite database path that receives the generated member rows.</param>
-        /// <param name="packageId">The package identifier that owns the documented object.</param>
-        /// <param name="version">The package version that owns the documented object.</param>
-        /// <param name="groupName">The documentation group name that owns the documented object.</param>
-        /// <param name="namespaceName">The namespace that contains the documented object.</param>
-        /// <param name="objectName">The documented object name.</param>
-        /// <param name="objectType">The documented object type.</param>
-        /// <param name="members">The granular members extracted for the documented object.</param>
-        public static void ReplaceObjectMembers(
-            string sqliteDatabasePath,
-            string packageId,
-            string version,
-            string groupName,
-            string namespaceName,
-            string objectName,
-            string objectType,
-            IEnumerable<DocumentationMemberDatabaseItem> members
-        )
-        {
-            EnsureTableCreated(sqliteDatabasePath);
-
-            DocumentationMemberDatabaseItem[] memberItems = members.ToArray();
-            string nowUtc = DateTime.UtcNow.ToString("O");
-
-            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
-            connection.Open();
-
-            using SqliteTransaction transaction = connection.BeginTransaction();
-
-            using var deleteCommand = new SqliteCommand(
-                """
-                DELETE FROM DocumentationMembers
-                WHERE PackageId = @PackageId
-                  AND Version = @Version
-                  AND NamespaceName = @NamespaceName
-                  AND ObjectName = @ObjectName
-                  AND ObjectType = @ObjectType;
-                """,
-                connection,
-                transaction);
-            deleteCommand.Parameters.AddWithValue("@PackageId", packageId);
-            deleteCommand.Parameters.AddWithValue("@Version", version);
-            deleteCommand.Parameters.AddWithValue("@NamespaceName", namespaceName);
-            deleteCommand.Parameters.AddWithValue("@ObjectName", objectName);
-            deleteCommand.Parameters.AddWithValue("@ObjectType", objectType);
-            deleteCommand.ExecuteNonQuery();
-
-            const string insertSql = """
-                                     INSERT INTO DocumentationMembers
-                                     (PackageId, Version, GroupName, NamespaceName, ObjectName, ObjectType,
-                                      MemberKind, MemberKey, MemberName, Signature, SummaryHtml, RemarksHtml,
-                                      ReturnsHtml, ValueHtml, ExampleHtml, Accessibility, IsStatic, IsAbstract,
-                                      IsVirtual, IsOverride, IsSealed, IsReadOnly, IsConst, IsObsolete,
-                                      ObsoleteMessage, ExtensionTypeName, ExtensionNamespaceName, ParametersJson,
-                                      ExceptionsJson, SortOrder, CreatedUtc, UpdatedUtc)
-                                     VALUES
-                                     (@PackageId, @Version, @GroupName, @NamespaceName, @ObjectName, @ObjectType,
-                                      @MemberKind, @MemberKey, @MemberName, @Signature, @SummaryHtml, @RemarksHtml,
-                                      @ReturnsHtml, @ValueHtml, @ExampleHtml, @Accessibility, @IsStatic, @IsAbstract,
-                                      @IsVirtual, @IsOverride, @IsSealed, @IsReadOnly, @IsConst, @IsObsolete,
-                                      @ObsoleteMessage, @ExtensionTypeName, @ExtensionNamespaceName, @ParametersJson,
-                                      @ExceptionsJson, @SortOrder, @CreatedUtc, @UpdatedUtc);
-                                     """;
-
-            foreach (DocumentationMemberDatabaseItem item in memberItems)
-            {
-                using var insertCommand = new SqliteCommand(insertSql, connection, transaction);
-                insertCommand.Parameters.AddWithValue("@PackageId", packageId);
-                insertCommand.Parameters.AddWithValue("@Version", version);
-                insertCommand.Parameters.AddWithValue("@GroupName", groupName);
-                insertCommand.Parameters.AddWithValue("@NamespaceName", namespaceName);
-                insertCommand.Parameters.AddWithValue("@ObjectName", objectName);
-                insertCommand.Parameters.AddWithValue("@ObjectType", objectType);
-                insertCommand.Parameters.AddWithValue("@MemberKind", item.MemberKind);
-                insertCommand.Parameters.AddWithValue("@MemberKey", item.MemberKey);
-                insertCommand.Parameters.AddWithValue("@MemberName", item.MemberName);
-                insertCommand.Parameters.AddWithValue("@Signature", item.Signature);
-                insertCommand.Parameters.AddWithValue("@SummaryHtml", item.SummaryHtml);
-                insertCommand.Parameters.AddWithValue("@RemarksHtml", item.RemarksHtml);
-                insertCommand.Parameters.AddWithValue("@ReturnsHtml", item.ReturnsHtml);
-                insertCommand.Parameters.AddWithValue("@ValueHtml", item.ValueHtml);
-                insertCommand.Parameters.AddWithValue("@ExampleHtml", item.ExampleHtml);
-                insertCommand.Parameters.AddWithValue("@Accessibility", item.Accessibility);
-                insertCommand.Parameters.AddWithValue("@IsStatic", item.IsStatic ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsAbstract", item.IsAbstract ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsVirtual", item.IsVirtual ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsOverride", item.IsOverride ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsSealed", item.IsSealed ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsReadOnly", item.IsReadOnly ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsConst", item.IsConst ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@IsObsolete", item.IsObsolete ? 1 : 0);
-                insertCommand.Parameters.AddWithValue("@ObsoleteMessage", item.ObsoleteMessage);
-                insertCommand.Parameters.AddWithValue("@ExtensionTypeName", item.ExtensionTypeName);
-                insertCommand.Parameters.AddWithValue("@ExtensionNamespaceName", item.ExtensionNamespaceName);
-                insertCommand.Parameters.AddWithValue("@ParametersJson", item.ParametersJson);
-                insertCommand.Parameters.AddWithValue("@ExceptionsJson", item.ExceptionsJson);
-                insertCommand.Parameters.AddWithValue("@SortOrder", item.SortOrder);
-                insertCommand.Parameters.AddWithValue("@CreatedUtc", nowUtc);
-                insertCommand.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
-                insertCommand.ExecuteNonQuery();
-            }
-
-            transaction.Commit();
-        }
-
-        /// <summary>
-        /// Replaces only the sidebar scopes affected by the generated package versions.
+        ///     Replaces only the sidebar scopes affected by the generated package versions.
         /// </summary>
         /// <param name="sqliteDatabasePath">The SQLite database path that receives the generated sidebar items.</param>
         /// <param name="items">The sidebar items to persist for the generated package versions.</param>
@@ -654,55 +493,192 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Deletes imported OpenAPI documents and operation indexes for one package version.
+        ///     Replaces captured C# source files for one generated package version.
         /// </summary>
-        /// <param name="sqliteDatabasePath">The SQLite database path that contains OpenAPI records.</param>
-        /// <param name="packageId">The package identifier whose OpenAPI records should be deleted.</param>
-        /// <param name="version">The package version whose OpenAPI records should be deleted.</param>
-        public static void DeleteOpenApiDocuments(
+        /// <param name="sqliteDatabasePath">The SQLite database path that receives source file snapshots.</param>
+        /// <param name="packageId">The package identifier whose source files are being replaced.</param>
+        /// <param name="version">The package version whose source files are being replaced.</param>
+        /// <param name="sourceFiles">The captured source files to persist.</param>
+        public static void ReplaceGeneratedSourceFiles(
             string sqliteDatabasePath,
             string packageId,
-            string version
+            string version,
+            IEnumerable<DocumentationSourceFileItem> sourceFiles
         )
         {
+            if (sourceFiles is null) throw new ArgumentNullException(nameof(sourceFiles));
+
             EnsureTableCreated(sqliteDatabasePath);
+
+            DocumentationSourceFileItem[] items = sourceFiles.ToArray();
+            string nowUtc = DateTime.UtcNow.ToString("O");
 
             using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
             connection.Open();
 
             using SqliteTransaction transaction = connection.BeginTransaction();
 
-            using (SqliteCommand deleteOperationsCommand = connection.CreateCommand())
+            using (SqliteCommand deleteCommand = connection.CreateCommand())
             {
-                deleteOperationsCommand.Transaction = transaction;
-                deleteOperationsCommand.CommandText = """
-                                                      DELETE FROM DocumentationOpenApiOperations
-                                                      WHERE PackageId = @PackageId
-                                                        AND Version = @Version
-                                                      """;
-                deleteOperationsCommand.Parameters.AddWithValue("@PackageId", packageId);
-                deleteOperationsCommand.Parameters.AddWithValue("@Version", version);
-                deleteOperationsCommand.ExecuteNonQuery();
+                deleteCommand.Transaction = transaction;
+                deleteCommand.CommandText = """
+                                            DELETE FROM DocumentationSourceFiles
+                                            WHERE PackageId = @PackageId
+                                              AND Version = @Version
+                                            """;
+                deleteCommand.Parameters.AddWithValue("@PackageId", packageId);
+                deleteCommand.Parameters.AddWithValue("@Version", version);
+                deleteCommand.ExecuteNonQuery();
             }
 
-            using (SqliteCommand deleteDocumentsCommand = connection.CreateCommand())
+            const string sql = """
+                               INSERT INTO DocumentationSourceFiles
+                               (PackageId, Version, ProjectFilePath, ProjectDirectoryPath, FilePath, RelativeFilePath,
+                                FileName, PrimaryNamespaceName, NamespaceNamesJson, TypeNamesJson, Content, ContentHash,
+                                CreatedUtc, UpdatedUtc)
+                               VALUES
+                               (@PackageId, @Version, @ProjectFilePath, @ProjectDirectoryPath, @FilePath, @RelativeFilePath,
+                                @FileName, @PrimaryNamespaceName, @NamespaceNamesJson, @TypeNamesJson, @Content, @ContentHash,
+                                @CreatedUtc, @UpdatedUtc)
+                               """;
+
+            using SqliteCommand insertCommand = connection.CreateCommand();
+            insertCommand.Transaction = transaction;
+            insertCommand.CommandText = sql;
+
+            foreach (DocumentationSourceFileItem item in items)
             {
-                deleteDocumentsCommand.Transaction = transaction;
-                deleteDocumentsCommand.CommandText = """
-                                                     DELETE FROM DocumentationOpenApiDocuments
-                                                     WHERE PackageId = @PackageId
-                                                       AND Version = @Version
-                                                     """;
-                deleteDocumentsCommand.Parameters.AddWithValue("@PackageId", packageId);
-                deleteDocumentsCommand.Parameters.AddWithValue("@Version", version);
-                deleteDocumentsCommand.ExecuteNonQuery();
+                insertCommand.Parameters.Clear();
+                insertCommand.Parameters.AddWithValue("@PackageId", item.PackageId);
+                insertCommand.Parameters.AddWithValue("@Version", item.Version);
+                insertCommand.Parameters.AddWithValue("@ProjectFilePath", item.ProjectFilePath);
+                insertCommand.Parameters.AddWithValue("@ProjectDirectoryPath", item.ProjectDirectoryPath);
+                insertCommand.Parameters.AddWithValue("@FilePath", item.FilePath);
+                insertCommand.Parameters.AddWithValue("@RelativeFilePath", item.RelativeFilePath);
+                insertCommand.Parameters.AddWithValue("@FileName", item.FileName);
+                insertCommand.Parameters.AddWithValue("@PrimaryNamespaceName", item.PrimaryNamespaceName);
+                insertCommand.Parameters.AddWithValue("@NamespaceNamesJson", JsonSerializer.Serialize(item.NamespaceNames));
+                insertCommand.Parameters.AddWithValue("@TypeNamesJson", JsonSerializer.Serialize(item.TypeNames));
+                insertCommand.Parameters.AddWithValue("@Content", item.Content);
+                insertCommand.Parameters.AddWithValue("@ContentHash", item.ContentHash);
+                insertCommand.Parameters.AddWithValue("@CreatedUtc", nowUtc);
+                insertCommand.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+                insertCommand.ExecuteNonQuery();
             }
 
             transaction.Commit();
         }
 
         /// <summary>
-        /// Replaces one imported OpenAPI document and its operation index.
+        ///     Replaces granular member metadata for one generated documentation object.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The SQLite database path that receives the generated member rows.</param>
+        /// <param name="packageId">The package identifier that owns the documented object.</param>
+        /// <param name="version">The package version that owns the documented object.</param>
+        /// <param name="groupName">The documentation group name that owns the documented object.</param>
+        /// <param name="namespaceName">The namespace that contains the documented object.</param>
+        /// <param name="objectName">The documented object name.</param>
+        /// <param name="objectType">The documented object type.</param>
+        /// <param name="members">The granular members extracted for the documented object.</param>
+        public static void ReplaceObjectMembers(
+            string sqliteDatabasePath,
+            string packageId,
+            string version,
+            string groupName,
+            string namespaceName,
+            string objectName,
+            string objectType,
+            IEnumerable<DocumentationMemberDatabaseItem> members
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
+
+            DocumentationMemberDatabaseItem[] memberItems = members.ToArray();
+            string nowUtc = DateTime.UtcNow.ToString("O");
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            using SqliteTransaction transaction = connection.BeginTransaction();
+
+            using var deleteCommand = new SqliteCommand(
+                """
+                DELETE FROM DocumentationMembers
+                WHERE PackageId = @PackageId
+                  AND Version = @Version
+                  AND NamespaceName = @NamespaceName
+                  AND ObjectName = @ObjectName
+                  AND ObjectType = @ObjectType;
+                """,
+                connection,
+                transaction);
+            deleteCommand.Parameters.AddWithValue("@PackageId", packageId);
+            deleteCommand.Parameters.AddWithValue("@Version", version);
+            deleteCommand.Parameters.AddWithValue("@NamespaceName", namespaceName);
+            deleteCommand.Parameters.AddWithValue("@ObjectName", objectName);
+            deleteCommand.Parameters.AddWithValue("@ObjectType", objectType);
+            deleteCommand.ExecuteNonQuery();
+
+            const string insertSql = """
+                                     INSERT INTO DocumentationMembers
+                                     (PackageId, Version, GroupName, NamespaceName, ObjectName, ObjectType,
+                                      MemberKind, MemberKey, MemberName, Signature, SummaryHtml, RemarksHtml,
+                                      ReturnsHtml, ValueHtml, ExampleHtml, Accessibility, IsStatic, IsAbstract,
+                                      IsVirtual, IsOverride, IsSealed, IsReadOnly, IsConst, IsObsolete,
+                                      ObsoleteMessage, ExtensionTypeName, ExtensionNamespaceName, ParametersJson,
+                                      ExceptionsJson, SortOrder, CreatedUtc, UpdatedUtc)
+                                     VALUES
+                                     (@PackageId, @Version, @GroupName, @NamespaceName, @ObjectName, @ObjectType,
+                                      @MemberKind, @MemberKey, @MemberName, @Signature, @SummaryHtml, @RemarksHtml,
+                                      @ReturnsHtml, @ValueHtml, @ExampleHtml, @Accessibility, @IsStatic, @IsAbstract,
+                                      @IsVirtual, @IsOverride, @IsSealed, @IsReadOnly, @IsConst, @IsObsolete,
+                                      @ObsoleteMessage, @ExtensionTypeName, @ExtensionNamespaceName, @ParametersJson,
+                                      @ExceptionsJson, @SortOrder, @CreatedUtc, @UpdatedUtc);
+                                     """;
+
+            foreach (DocumentationMemberDatabaseItem item in memberItems)
+            {
+                using var insertCommand = new SqliteCommand(insertSql, connection, transaction);
+                insertCommand.Parameters.AddWithValue("@PackageId", packageId);
+                insertCommand.Parameters.AddWithValue("@Version", version);
+                insertCommand.Parameters.AddWithValue("@GroupName", groupName);
+                insertCommand.Parameters.AddWithValue("@NamespaceName", namespaceName);
+                insertCommand.Parameters.AddWithValue("@ObjectName", objectName);
+                insertCommand.Parameters.AddWithValue("@ObjectType", objectType);
+                insertCommand.Parameters.AddWithValue("@MemberKind", item.MemberKind);
+                insertCommand.Parameters.AddWithValue("@MemberKey", item.MemberKey);
+                insertCommand.Parameters.AddWithValue("@MemberName", item.MemberName);
+                insertCommand.Parameters.AddWithValue("@Signature", item.Signature);
+                insertCommand.Parameters.AddWithValue("@SummaryHtml", item.SummaryHtml);
+                insertCommand.Parameters.AddWithValue("@RemarksHtml", item.RemarksHtml);
+                insertCommand.Parameters.AddWithValue("@ReturnsHtml", item.ReturnsHtml);
+                insertCommand.Parameters.AddWithValue("@ValueHtml", item.ValueHtml);
+                insertCommand.Parameters.AddWithValue("@ExampleHtml", item.ExampleHtml);
+                insertCommand.Parameters.AddWithValue("@Accessibility", item.Accessibility);
+                insertCommand.Parameters.AddWithValue("@IsStatic", item.IsStatic ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsAbstract", item.IsAbstract ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsVirtual", item.IsVirtual ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsOverride", item.IsOverride ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsSealed", item.IsSealed ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsReadOnly", item.IsReadOnly ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsConst", item.IsConst ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@IsObsolete", item.IsObsolete ? 1 : 0);
+                insertCommand.Parameters.AddWithValue("@ObsoleteMessage", item.ObsoleteMessage);
+                insertCommand.Parameters.AddWithValue("@ExtensionTypeName", item.ExtensionTypeName);
+                insertCommand.Parameters.AddWithValue("@ExtensionNamespaceName", item.ExtensionNamespaceName);
+                insertCommand.Parameters.AddWithValue("@ParametersJson", item.ParametersJson);
+                insertCommand.Parameters.AddWithValue("@ExceptionsJson", item.ExceptionsJson);
+                insertCommand.Parameters.AddWithValue("@SortOrder", item.SortOrder);
+                insertCommand.Parameters.AddWithValue("@CreatedUtc", nowUtc);
+                insertCommand.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+                insertCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+
+        /// <summary>
+        ///     Replaces one imported OpenAPI document and its operation index.
         /// </summary>
         /// <param name="sqliteDatabasePath">The SQLite database path that receives OpenAPI records.</param>
         /// <param name="document">The imported OpenAPI document to persist.</param>
@@ -803,155 +779,106 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Replaces captured C# source files for one generated package version.
-        /// </summary>
-        /// <param name="sqliteDatabasePath">The SQLite database path that receives source file snapshots.</param>
-        /// <param name="packageId">The package identifier whose source files are being replaced.</param>
-        /// <param name="version">The package version whose source files are being replaced.</param>
-        /// <param name="sourceFiles">The captured source files to persist.</param>
-        public static void ReplaceGeneratedSourceFiles(
-            string sqliteDatabasePath,
-            string packageId,
-            string version,
-            IEnumerable<DocumentationSourceFileItem> sourceFiles
-        )
-        {
-            if (sourceFiles is null) throw new ArgumentNullException(nameof(sourceFiles));
-
-            EnsureTableCreated(sqliteDatabasePath);
-
-            DocumentationSourceFileItem[] items = sourceFiles.ToArray();
-            string nowUtc = DateTime.UtcNow.ToString("O");
-
-            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
-            connection.Open();
-
-            using SqliteTransaction transaction = connection.BeginTransaction();
-
-            using (SqliteCommand deleteCommand = connection.CreateCommand())
-            {
-                deleteCommand.Transaction = transaction;
-                deleteCommand.CommandText = """
-                                            DELETE FROM DocumentationSourceFiles
-                                            WHERE PackageId = @PackageId
-                                              AND Version = @Version
-                                            """;
-                deleteCommand.Parameters.AddWithValue("@PackageId", packageId);
-                deleteCommand.Parameters.AddWithValue("@Version", version);
-                deleteCommand.ExecuteNonQuery();
-            }
-
-            const string sql = """
-                               INSERT INTO DocumentationSourceFiles
-                               (PackageId, Version, ProjectFilePath, ProjectDirectoryPath, FilePath, RelativeFilePath,
-                                FileName, PrimaryNamespaceName, NamespaceNamesJson, TypeNamesJson, Content, ContentHash,
-                                CreatedUtc, UpdatedUtc)
-                               VALUES
-                               (@PackageId, @Version, @ProjectFilePath, @ProjectDirectoryPath, @FilePath, @RelativeFilePath,
-                                @FileName, @PrimaryNamespaceName, @NamespaceNamesJson, @TypeNamesJson, @Content, @ContentHash,
-                                @CreatedUtc, @UpdatedUtc)
-                               """;
-
-            using SqliteCommand insertCommand = connection.CreateCommand();
-            insertCommand.Transaction = transaction;
-            insertCommand.CommandText = sql;
-
-            foreach (DocumentationSourceFileItem item in items)
-            {
-                insertCommand.Parameters.Clear();
-                insertCommand.Parameters.AddWithValue("@PackageId", item.PackageId);
-                insertCommand.Parameters.AddWithValue("@Version", item.Version);
-                insertCommand.Parameters.AddWithValue("@ProjectFilePath", item.ProjectFilePath);
-                insertCommand.Parameters.AddWithValue("@ProjectDirectoryPath", item.ProjectDirectoryPath);
-                insertCommand.Parameters.AddWithValue("@FilePath", item.FilePath);
-                insertCommand.Parameters.AddWithValue("@RelativeFilePath", item.RelativeFilePath);
-                insertCommand.Parameters.AddWithValue("@FileName", item.FileName);
-                insertCommand.Parameters.AddWithValue("@PrimaryNamespaceName", item.PrimaryNamespaceName);
-                insertCommand.Parameters.AddWithValue("@NamespaceNamesJson", JsonSerializer.Serialize(item.NamespaceNames));
-                insertCommand.Parameters.AddWithValue("@TypeNamesJson", JsonSerializer.Serialize(item.TypeNames));
-                insertCommand.Parameters.AddWithValue("@Content", item.Content);
-                insertCommand.Parameters.AddWithValue("@ContentHash", item.ContentHash);
-                insertCommand.Parameters.AddWithValue("@CreatedUtc", nowUtc);
-                insertCommand.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
-                insertCommand.ExecuteNonQuery();
-            }
-
-            transaction.Commit();
-        }
-        
-        /// <summary>
-        /// Saves a project context file entry to SQLite.
+        ///     Saves generated documentation object metadata and rendered content to SQLite.
         /// </summary>
         /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
         /// <param name="version">The version value used by the documentation generation operation.</param>
-        /// <param name="projectFilePath">The projectFilePath value used by the documentation generation operation.</param>
-        /// <param name="projectDirectoryPath">The projectDirectoryPath value used by the documentation generation operation.</param>
-        /// <param name="filePath">The filePath value used by the documentation generation operation.</param>
-        /// <param name="fileName">The fileName value used by the documentation generation operation.</param>
-        /// <param name="contextType">The contextType value used by the documentation generation operation.</param>
-        /// <param name="sourceFolderType">The sourceFolderType value used by the documentation generation operation.</param>
-        /// <param name="directoryDepth">The directoryDepth value used by the documentation generation operation.</param>
-        /// <param name="content">The content value used by the documentation generation operation.</param>
-        public static void SaveProjectContextFile(
-    string sqliteDatabasePath,
-    string packageId,
-    string version,
-    string projectFilePath,
-    string projectDirectoryPath,
-    string filePath,
-    string fileName,
-    string contextType,
-    string sourceFolderType,
-    int directoryDepth,
-    string content
-)
-{
-    EnsureTableCreated(sqliteDatabasePath);
+        /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>
+        /// <param name="objectName">The objectName value used by the documentation generation operation.</param>
+        /// <param name="objectType">The objectType value used by the documentation generation operation.</param>
+        /// <param name="model">The model value used by the documentation generation operation.</param>
+        /// <param name="htmlContent">The htmlContent value used by the documentation generation operation.</param>
+        /// <param name="technicalKeywords">The technicalKeywords value used by the documentation generation operation.</param>
+        /// <param name="keywords">The keywords value used by the documentation generation operation.</param>
+        /// <param name="routePath">The routePath value used by the documentation generation operation.</param>
+        public static void SaveObject(
+            string sqliteDatabasePath,
+            string packageId,
+            string version,
+            string namespaceName,
+            string objectName,
+            string objectType,
+            object model,
+            string htmlContent,
+            string technicalKeywords,
+            string keywords,
+            string routePath
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
 
-    string nowUtc = DateTime.UtcNow.ToString("O");
+            string modelJson = JsonSerializer.Serialize(model);
+            string nowUtc = DateTime.UtcNow.ToString("O");
 
-    using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
-    connection.Open();
+            using (var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}"))
+            {
+                connection.Open();
 
-    const string sql = @"
-    INSERT INTO DocumentationProjectContextFiles
-    (PackageId, Version, ProjectFilePath, ProjectDirectoryPath,
-     FilePath, FileName, ContextType, SourceFolderType, DirectoryDepth,
-     Content, CreatedUtc, UpdatedUtc)
-    VALUES
-    (@PackageId, @Version, @ProjectFilePath, @ProjectDirectoryPath,
-     @FilePath, @FileName, @ContextType, @SourceFolderType, @DirectoryDepth,
-     @Content, @CreatedUtc, @UpdatedUtc)
-    ON CONFLICT(PackageId, Version, FilePath) DO UPDATE SET
-        FileName = excluded.FileName,
-        ContextType = excluded.ContextType,
-        SourceFolderType = excluded.SourceFolderType,
-        DirectoryDepth = excluded.DirectoryDepth,
-        Content = excluded.Content,
-        UpdatedUtc = excluded.UpdatedUtc;
-    ";
+                if (string.Equals(objectType, "Group", StringComparison.Ordinal) &&
+                    string.IsNullOrWhiteSpace(packageId) &&
+                    !string.IsNullOrWhiteSpace(version))
+                {
+                    using var deleteLegacyGroupCommand = new SqliteCommand(
+                        """
+                        DELETE FROM DocumentationObjects
+                        WHERE PackageId = ''
+                          AND Version = ''
+                          AND NamespaceName = ''
+                          AND ObjectName = @ObjectName
+                          AND ObjectType = 'Group';
+                        """,
+                        connection);
+                    deleteLegacyGroupCommand.Parameters.AddWithValue("@ObjectName", objectName);
+                    deleteLegacyGroupCommand.ExecuteNonQuery();
+                }
 
-    using var command = new SqliteCommand(sql, connection);
+                string insertSql = @"
+                INSERT INTO DocumentationObjects 
+                (PackageId, Version, NamespaceName, ObjectName, ObjectType, RoutePath, ModelInJson, HtmlContent, TechnicalKeywords, Keywords, CreatedUtc, UpdatedUtc, Builder)
+                VALUES (@PackageId, @Version, @NamespaceName, @ObjectName, @ObjectType, @RoutePath, @ModelInJson, @HtmlContent, @TechnicalKeywords, @Keywords, @CreatedUtc, @UpdatedUtc, @Builder)
+                ON CONFLICT(PackageId, Version, NamespaceName, ObjectName, ObjectType) DO UPDATE SET
+                    RoutePath = excluded.RoutePath,
+                    ModelInJson = excluded.ModelInJson,
+                    HtmlContent = excluded.HtmlContent,
+                    TechnicalKeywords = excluded.TechnicalKeywords,
+                    Keywords = excluded.Keywords,
+                    UpdatedUtc = excluded.UpdatedUtc,
+                    Builder = excluded.Builder;";
 
-    command.Parameters.AddWithValue("@PackageId", packageId);
-    command.Parameters.AddWithValue("@Version", version);
-    command.Parameters.AddWithValue("@ProjectFilePath", projectFilePath);
-    command.Parameters.AddWithValue("@ProjectDirectoryPath", projectDirectoryPath);
-    command.Parameters.AddWithValue("@FilePath", filePath);
-    command.Parameters.AddWithValue("@FileName", fileName);
-    command.Parameters.AddWithValue("@ContextType", contextType);
-    command.Parameters.AddWithValue("@SourceFolderType", sourceFolderType);
-    command.Parameters.AddWithValue("@DirectoryDepth", directoryDepth);
-    command.Parameters.AddWithValue("@Content", content);
-    command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
-    command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+                using (var command = new SqliteCommand(insertSql, connection))
+                {
+                    command.Parameters.AddWithValue("@PackageId", packageId);
+                    command.Parameters.AddWithValue("@Version", version);
+                    command.Parameters.AddWithValue("@NamespaceName", namespaceName);
+                    command.Parameters.AddWithValue("@ObjectName", objectName);
+                    command.Parameters.AddWithValue("@ObjectType", objectType);
+                    command.Parameters.AddWithValue("@ModelInJson", modelJson);
+                    command.Parameters.AddWithValue("@HtmlContent", htmlContent);
+                    command.Parameters.AddWithValue("@TechnicalKeywords", technicalKeywords);
+                    command.Parameters.AddWithValue("@Keywords", keywords);
+                    command.Parameters.AddWithValue("@RoutePath", routePath);
+                    command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
+                    command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+                    command.Parameters.AddWithValue("@Builder", DocumentationVisualHelper.DocumentationBuilderVersion);
 
-    command.ExecuteNonQuery();
-}
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (SqliteException e)
+                    {
+                        Console.WriteLine($"[DEBUG_LOG] Error saving object: {packageId} v{version} - {namespaceName}.{objectName} ({objectType})");
+                        Console.WriteLine($"[DEBUG_LOG] RoutePath: {routePath}");
+                        Console.WriteLine($"[DEBUG_LOG] SQLite Error: {e.Message}");
+                        throw;
+                    }
+                }
+            }
+        }
 
         /// <summary>
-        /// Saves source content associated with a generated documentation object.
+        ///     Saves source content associated with a generated documentation object.
         /// </summary>
         /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
         /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
@@ -996,6 +923,77 @@ namespace DMBDocumentationBuilder
             command.Parameters.AddWithValue("@FileCount", fileCount);
             command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
             command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        ///     Saves a project context file entry to SQLite.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
+        /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
+        /// <param name="version">The version value used by the documentation generation operation.</param>
+        /// <param name="projectFilePath">The projectFilePath value used by the documentation generation operation.</param>
+        /// <param name="projectDirectoryPath">The projectDirectoryPath value used by the documentation generation operation.</param>
+        /// <param name="filePath">The filePath value used by the documentation generation operation.</param>
+        /// <param name="fileName">The fileName value used by the documentation generation operation.</param>
+        /// <param name="contextType">The contextType value used by the documentation generation operation.</param>
+        /// <param name="sourceFolderType">The sourceFolderType value used by the documentation generation operation.</param>
+        /// <param name="directoryDepth">The directoryDepth value used by the documentation generation operation.</param>
+        /// <param name="content">The content value used by the documentation generation operation.</param>
+        public static void SaveProjectContextFile(
+            string sqliteDatabasePath,
+            string packageId,
+            string version,
+            string projectFilePath,
+            string projectDirectoryPath,
+            string filePath,
+            string fileName,
+            string contextType,
+            string sourceFolderType,
+            int directoryDepth,
+            string content
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
+
+            string nowUtc = DateTime.UtcNow.ToString("O");
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            const string sql = @"
+    INSERT INTO DocumentationProjectContextFiles
+    (PackageId, Version, ProjectFilePath, ProjectDirectoryPath,
+     FilePath, FileName, ContextType, SourceFolderType, DirectoryDepth,
+     Content, CreatedUtc, UpdatedUtc)
+    VALUES
+    (@PackageId, @Version, @ProjectFilePath, @ProjectDirectoryPath,
+     @FilePath, @FileName, @ContextType, @SourceFolderType, @DirectoryDepth,
+     @Content, @CreatedUtc, @UpdatedUtc)
+    ON CONFLICT(PackageId, Version, FilePath) DO UPDATE SET
+        FileName = excluded.FileName,
+        ContextType = excluded.ContextType,
+        SourceFolderType = excluded.SourceFolderType,
+        DirectoryDepth = excluded.DirectoryDepth,
+        Content = excluded.Content,
+        UpdatedUtc = excluded.UpdatedUtc;
+    ";
+
+            using var command = new SqliteCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@PackageId", packageId);
+            command.Parameters.AddWithValue("@Version", version);
+            command.Parameters.AddWithValue("@ProjectFilePath", projectFilePath);
+            command.Parameters.AddWithValue("@ProjectDirectoryPath", projectDirectoryPath);
+            command.Parameters.AddWithValue("@FilePath", filePath);
+            command.Parameters.AddWithValue("@FileName", fileName);
+            command.Parameters.AddWithValue("@ContextType", contextType);
+            command.Parameters.AddWithValue("@SourceFolderType", sourceFolderType);
+            command.Parameters.AddWithValue("@DirectoryDepth", directoryDepth);
+            command.Parameters.AddWithValue("@Content", content);
+            command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
+            command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+
             command.ExecuteNonQuery();
         }
 

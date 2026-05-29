@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationClassPageManager.cs create at 2026/04/13 12:04:26
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -21,7 +19,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationClassPageManager type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationClassPageManager type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationClassPageManager
     {
@@ -102,6 +100,42 @@ namespace DMBDocumentationBuilder
             string staticModifier = methodSymbol.IsStatic ? " static" : string.Empty;
 
             return $"{accessibility}{staticModifier} {returnType} {methodSymbol.Name}{typeParameters}({parameters})".Trim();
+        }
+
+        private static CSharpCompilation BuildGlobalCompilation(
+            IEnumerable<DocumentationProjectDescriptor> projects
+        )
+        {
+            List<SyntaxTree> syntaxTrees = [];
+            HashSet<string> metadataPaths = new(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DocumentationProjectDescriptor project in projects)
+            {
+                if (!File.Exists(project.ProjectFilePath)) throw new FileNotFoundException("Project file not found.", project.ProjectFilePath);
+
+                string projectDirectory = Path.GetDirectoryName(project.ProjectFilePath)
+                                          ?? throw new InvalidOperationException("Unable to resolve project directory.");
+
+                foreach (string sourceFile in Directory
+                             .GetFiles(projectDirectory, "*.cs", SearchOption.AllDirectories)
+                             .Where(path => !IsInBuildDirectory(path)))
+                {
+                    syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), path: sourceFile));
+                }
+
+                foreach (string referencePath in GetMetadataReferencePaths(projectDirectory)) metadataPaths.Add(referencePath);
+            }
+
+            return CSharpCompilation.Create(
+                assemblyName: "DocumentationGlobalCompilation",
+                syntaxTrees: syntaxTrees,
+                references: metadataPaths.Select(path => MetadataReference.CreateFromFile(path)),
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        }
+
+        private static string BuildMemberKey(string memberKind, string signature)
+        {
+            return $"{memberKind}:{signature}";
         }
 
         private static List<DocumentationMemberDatabaseItem> BuildMemberRows(DocumentationClassPageModel model)
@@ -219,42 +253,6 @@ namespace DMBDocumentationBuilder
             return members;
         }
 
-        private static string BuildMemberKey(string memberKind, string signature)
-        {
-            return $"{memberKind}:{signature}";
-        }
-
-        private static CSharpCompilation BuildGlobalCompilation(
-            IEnumerable<DocumentationProjectDescriptor> projects
-        )
-        {
-            List<SyntaxTree> syntaxTrees = [];
-            HashSet<string> metadataPaths = new(StringComparer.OrdinalIgnoreCase);
-
-            foreach (DocumentationProjectDescriptor project in projects)
-            {
-                if (!File.Exists(project.ProjectFilePath)) throw new FileNotFoundException("Project file not found.", project.ProjectFilePath);
-
-                string projectDirectory = Path.GetDirectoryName(project.ProjectFilePath)
-                                          ?? throw new InvalidOperationException("Unable to resolve project directory.");
-
-                foreach (string sourceFile in Directory
-                             .GetFiles(projectDirectory, "*.cs", SearchOption.AllDirectories)
-                             .Where(path => !IsInBuildDirectory(path)))
-                {
-                    syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), path: sourceFile));
-                }
-
-                foreach (string referencePath in GetMetadataReferencePaths(projectDirectory)) metadataPaths.Add(referencePath);
-            }
-
-            return CSharpCompilation.Create(
-                assemblyName: "DocumentationGlobalCompilation",
-                syntaxTrees: syntaxTrees,
-                references: metadataPaths.Select(path => MetadataReference.CreateFromFile(path)),
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        }
-
         private static DocumentationTypeLinkItem? BuildTypeLinkItem(
             INamedTypeSymbol? typeSymbol,
             IReadOnlyDictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex
@@ -340,11 +338,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Generates documentation artifacts for the configured documentation group and project descriptors.
+        ///     Generates documentation artifacts for the configured documentation group and project descriptors.
         /// </summary>
         /// <param name="groups">The groups value used by the documentation generation operation.</param>
         /// <param name="pageOutputDirectory">The pageOutputDirectory value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
         public static void Generate(
             IEnumerable<DocumentationGroupDescriptor> groups,

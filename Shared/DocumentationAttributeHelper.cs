@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationAttributeHelper.cs create at 2026/04/13 12:04:26
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -24,7 +22,7 @@ namespace DMBDocumentationBuilder.Shared
         #region Static methods
 
         /// <summary>
-        /// Determines whether a Roslyn symbol carries obsolete metadata.
+        ///     Determines whether a Roslyn symbol carries obsolete metadata.
         /// </summary>
         /// <param name="symbol">The symbol value used by the documentation generation operation.</param>
         /// <param name="message">The message value used by the documentation generation operation.</param>

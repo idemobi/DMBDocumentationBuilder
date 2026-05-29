@@ -1,23 +1,21 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationPathHelper.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Represents the DocumentationPathHelper type used by DocumentationBuilder generation.
+    ///     Represents the DocumentationPathHelper type used by DocumentationBuilder generation.
     /// </summary>
     public static class DocumentationPathHelper
     {
         #region Static methods
 
         /// <summary>
-        /// Converts a namespace name to the generated documentation folder name.
+        ///     Converts a namespace name to the generated documentation folder name.
         /// </summary>
         /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>
         /// <returns>The NamespaceToFolder result produced by DocumentationBuilder generation.</returns>
@@ -30,7 +28,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Converts a namespace name to a generated documentation path segment.
+        ///     Converts a namespace name to a generated documentation path segment.
         /// </summary>
         /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>
         /// <returns>The NamespaceToPath result produced by DocumentationBuilder generation.</returns>
@@ -40,7 +38,7 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Converts a documentation label to a safe generated file or route name.
+        ///     Converts a documentation label to a safe generated file or route name.
         /// </summary>
         /// <param name="value">The value value used by the documentation generation operation.</param>
         /// <returns>The ToSafeName result produced by DocumentationBuilder generation.</returns>

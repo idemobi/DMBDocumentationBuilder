@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationOpenApiExtractor.cs create at 2026/05/22 00:00:00
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -17,7 +15,7 @@ using System.Text.Json;
 namespace DMBDocumentationBuilder
 {
     /// <summary>
-    /// Imports OpenAPI 3 JSON documents into DocumentationBuilder data models.
+    ///     Imports OpenAPI 3 JSON documents into DocumentationBuilder data models.
     /// </summary>
     public static class DocumentationOpenApiExtractor
     {
@@ -39,8 +37,44 @@ namespace DMBDocumentationBuilder
 
         #region Static methods
 
+        private static string BuildOperationId(string method, string path)
+        {
+            string normalizedPath = path
+                .Replace("{", string.Empty, StringComparison.Ordinal)
+                .Replace("}", string.Empty, StringComparison.Ordinal);
+
+            string[] tokens = normalizedPath
+                .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(ToPascalToken)
+                .Where(token => !string.IsNullOrWhiteSpace(token))
+                .ToArray();
+
+            return method.ToLowerInvariant() + string.Join(string.Empty, tokens);
+        }
+
+        private static string BuildRoutePath(
+            string groupName,
+            string packageId,
+            string version,
+            string documentName,
+            string operationId
+        )
+        {
+            string routePath = "/Documentation/ShowOpenApi?groupName=" + WebUtility.UrlEncode(groupName)
+                                                                       + "&packageId=" + WebUtility.UrlEncode(packageId)
+                                                                       + "&version=" + WebUtility.UrlEncode(version)
+                                                                       + "&namespaceName=" + WebUtility.UrlEncode(documentName);
+
+            if (!string.IsNullOrWhiteSpace(operationId))
+            {
+                routePath += "&objectName=" + WebUtility.UrlEncode(operationId);
+            }
+
+            return routePath;
+        }
+
         /// <summary>
-        /// Extracts configured OpenAPI documents for one documented project.
+        ///     Extracts configured OpenAPI documents for one documented project.
         /// </summary>
         /// <param name="groupName">The documentation group that owns the project.</param>
         /// <param name="project">The documented project whose OpenAPI documents should be imported.</param>
@@ -94,42 +128,6 @@ namespace DMBDocumentationBuilder
             }
 
             return result;
-        }
-
-        private static string BuildOperationId(string method, string path)
-        {
-            string normalizedPath = path
-                .Replace("{", string.Empty, StringComparison.Ordinal)
-                .Replace("}", string.Empty, StringComparison.Ordinal);
-
-            string[] tokens = normalizedPath
-                .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(ToPascalToken)
-                .Where(token => !string.IsNullOrWhiteSpace(token))
-                .ToArray();
-
-            return method.ToLowerInvariant() + string.Join(string.Empty, tokens);
-        }
-
-        private static string BuildRoutePath(
-            string groupName,
-            string packageId,
-            string version,
-            string documentName,
-            string operationId
-        )
-        {
-            string routePath = "/Documentation/ShowOpenApi?groupName=" + WebUtility.UrlEncode(groupName)
-                               + "&packageId=" + WebUtility.UrlEncode(packageId)
-                               + "&version=" + WebUtility.UrlEncode(version)
-                               + "&namespaceName=" + WebUtility.UrlEncode(documentName);
-
-            if (!string.IsNullOrWhiteSpace(operationId))
-            {
-                routePath += "&objectName=" + WebUtility.UrlEncode(operationId);
-            }
-
-            return routePath;
         }
 
         private static IReadOnlyList<DocumentationOpenApiOperationItem> ExtractOperations(

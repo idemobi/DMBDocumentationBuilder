@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationPartialGenerator.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -42,7 +40,7 @@ namespace DMBDocumentationBuilder
         #region Static methods
 
         /// <summary>
-        /// Ensures that shared documentation partial files exist in the host project.
+        ///     Ensures that shared documentation partial files exist in the host project.
         /// </summary>
         /// <param name="customizeRootDirectory">The customizeRootDirectory value used by the documentation generation operation.</param>
         /// <param name="namespaceName">The namespaceName value used by the documentation generation operation.</param>

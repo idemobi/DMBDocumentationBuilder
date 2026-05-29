@@ -1,9 +1,7 @@
 #region Copyright
 
-// Game-Data-Forge Solution
-// Written by CONTART Jean-François & BOULOGNE Quentin
-// DMBDocumentationBuilder.csproj DocumentationGroupAndNamespacePageRenderer.cs create at 2026/04/12 12:04:31
-// ©2024-2026 idéMobi SARL FRANCE
+// ©2002-2026 idéMobi
+// www.idemobi.com
 
 #endregion
 
@@ -19,16 +17,6 @@ namespace DMBDocumentationBuilder
     {
         #region Static methods
 
-        private static string EscapeCSharp(string value)
-        {
-            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
-        }
-
-        private static string Html(string? value)
-        {
-            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
-        }
-
         private static void AppendRouteValue(StringBuilder sb, string key, string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -40,6 +28,16 @@ namespace DMBDocumentationBuilder
                 .Append(key)
                 .Append("=")
                 .Append(System.Net.WebUtility.UrlEncode(value));
+        }
+
+        private static string EscapeCSharp(string value)
+        {
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private static string Html(string? value)
+        {
+            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
         }
 
         private static string ReadPartialContent(
@@ -76,11 +74,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the HTML content for a documentation group page.
+        ///     Renders the HTML content for a documentation group page.
         /// </summary>
         /// <param name="item">The item value used by the documentation generation operation.</param>
         /// <param name="safeGroupName">The safeGroupName value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         /// <returns>The RenderGroupHtml result produced by DocumentationBuilder generation.</returns>
         public static string RenderGroupHtml(DocumentationGroupPageModel item, string safeGroupName, string sharedDocumentationRootDirectory)
         {
@@ -173,11 +174,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Writes generated documentation group pages.
+        ///     Writes generated documentation group pages.
         /// </summary>
         /// <param name="items">The items value used by the documentation generation operation.</param>
         /// <param name="pageOutputDirectory">The pageOutputDirectory value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         public static void RenderGroupPages(
             IEnumerable<DocumentationGroupPageModel> items,
             string pageOutputDirectory,
@@ -193,11 +197,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Renders the HTML content for a documentation namespace page.
+        ///     Renders the HTML content for a documentation namespace page.
         /// </summary>
         /// <param name="item">The item value used by the documentation generation operation.</param>
         /// <param name="namespacePath">The namespacePath value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         /// <returns>The RenderNamespaceHtml result produced by DocumentationBuilder generation.</returns>
         public static string RenderNamespaceHtml(DocumentationNamespacePageModel item, string namespacePath, string sharedDocumentationRootDirectory)
         {
@@ -256,11 +263,14 @@ namespace DMBDocumentationBuilder
         }
 
         /// <summary>
-        /// Writes generated documentation namespace pages.
+        ///     Writes generated documentation namespace pages.
         /// </summary>
         /// <param name="items">The items value used by the documentation generation operation.</param>
         /// <param name="pageOutputDirectory">The pageOutputDirectory value used by the documentation generation operation.</param>
-        /// <param name="sharedDocumentationRootDirectory">The sharedDocumentationRootDirectory value used by the documentation generation operation.</param>
+        /// <param name="sharedDocumentationRootDirectory">
+        ///     The sharedDocumentationRootDirectory value used by the documentation
+        ///     generation operation.
+        /// </param>
         public static void RenderNamespacePages(
             IEnumerable<DocumentationNamespacePageModel> items,
             string pageOutputDirectory,
