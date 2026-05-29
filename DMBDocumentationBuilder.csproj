@@ -2,7 +2,7 @@
     <PropertyGroup>
         <RootNamespace>DMBDocumentationBuilder</RootNamespace>
         <Title>DMBDocumentationBuilder</Title>
-        <PackageTags>idemobi Documentation Viewer</PackageTags>
+        <PackageTags>idemobi DMB Documentation Builder Generator Roslyn XML Markdown OpenAPI SQLite</PackageTags>
         <Description>Documentation generation package that extracts XML comments, Markdown content, OpenAPI metadata, and source context.</Description>
         <PackageReleaseNotes>note</PackageReleaseNotes>
         <PackageIcon>DMBDocumentationBuilder.png</PackageIcon>
