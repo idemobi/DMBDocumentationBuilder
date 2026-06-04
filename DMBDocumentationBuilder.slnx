@@ -1,0 +1,43 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="NuGet" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/Source/">
+    <Project Path="Source/Builder/DMBDocumentationBuilder.csproj" />
+    <Project Path="Source/Test/DMBDocumentationTest.csproj" />
+    <Project Path="Source/ImprovementByAI/DMBDocumentationImprovementByAI.csproj" />
+    <Project Path="Source/ExampleToRaw/DMBExampleToRaw.csproj" />
+    <Project Path="Source/Viewer/DMBDocumentationViewer.csproj" />
+  </Folder>
+  <Folder Name="/Labs/">
+    <Project Path="Labs/DMBDocumentationBuilderLabs.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Website/">
+    <Project Path="Website/DMBDocumentationBuilderWebsite.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Programs/">
+    <Project Path="Programs/PreBuilding/DMBDocumentationBuilderPreBuilding.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/UnitTests/">
+    <Project Path="UnitTests/Builder/DMBDocumentationBuilderUnitTest.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+    <Project Path="UnitTests/Test/DMBDocumentationTestUnitTest.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+    <Project Path="UnitTests/ImprovementByAI/DMBDocumentationImprovementByAIUnitTest.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+    <Project Path="UnitTests/Viewer/DMBDocumentationViewerUnitTest.csproj">
+      <BuildType Solution="NuGet|*" Project="Debug" />
+    </Project>
+  </Folder>
+</Solution>

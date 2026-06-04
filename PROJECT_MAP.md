@@ -11,7 +11,10 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 - Viewer project folder: `Source/Viewer/`
 - Test project folder: `Source/Test/`
 - ImprovementByAI project folder: `Source/ImprovementByAI/`
+- ExampleToRaw project folder: `Source/ExampleToRaw/`
 - Labs project folder: `Labs/`
+- Website project folder: `Website/`
+- Local PreBuilding program folder: `Programs/PreBuilding/`
 - Unit test project folders: `UnitTests/Builder/`, `UnitTests/Viewer/`, `UnitTests/Test/`, and `UnitTests/ImprovementByAI/`
 - Important Builder folders: `Source/Builder/General/`, `Source/Builder/Shared/`, `Source/Builder/ForClass/`, `Source/Builder/ForRecord/`, `Source/Builder/ForStruct/`, `Source/Builder/ForInterface/`, and `Source/Builder/ForEnum/`.
 - Documentation target: `labs_idemobi_com`
@@ -57,8 +60,18 @@ When copying this file to another PageBuilder ecosystem project, update this sec
   - Console tool for AI-assisted improvement of generated documentation content and documentation databases.
   - Includes provider-specific runtimes and options for Claude, Groq, LM Studio, Mistral, Ollama, and OpenAI.
 
+- `Source/ExampleToRaw/`
+  - Example extraction package that mirrors Razor example partials into raw source files for documentation pages.
+
 - `Labs/`
-  - Razor pages, controllers, sidebars, and view helpers for documentation-family presentation pages displayed by `labs_idemobi_com`.
+  - Razor pages, controllers, reusable navigation fragments, and view helpers for documentation-family presentation pages displayed by local and final hosts.
+
+- `Website/`
+  - Local ASP.NET Core host website for testing Documentation-family labs pages and generated DocumentationViewer data.
+  - `Documentation/` is the local output target for generated API and documentation data.
+
+- `Programs/PreBuilding/`
+  - Local console program that generates DocumentationViewer data for the `Website/Documentation/` folder.
 
 - `UnitTests/Builder/`
   - Unit tests for the documentation builder package.

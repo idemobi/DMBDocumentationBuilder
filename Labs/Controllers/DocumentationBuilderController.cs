@@ -10,7 +10,6 @@
 using DMBBootstrapBuilder;
 using DMBPageBuilder;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 #endregion
 
@@ -21,45 +20,7 @@ namespace DMBDocumentationBuilderLabs.Controllers
     /// </summary>
     public class DocumentationBuilderController : RawBootstrapController
     {
-        #region Static methods
-
-        private static IconStruct ResolveBreadcrumbIcon(string actionName)
-        {
-            return actionName switch
-            {
-                nameof(GettingStarted) => IconStruct.Bootstrap("bi-play-circle"),
-                nameof(Architecture) => IconStruct.Bootstrap("bi-diagram-3"),
-                nameof(RenderingPipeline) => IconStruct.Bootstrap("bi-bezier2"),
-                _ => IconStruct.Bootstrap("bi-info-circle")
-            };
-        }
-
-        private static string ResolveBreadcrumbTitle(string actionName)
-        {
-            return actionName switch
-            {
-                nameof(GettingStarted) => "Getting Started",
-                nameof(Architecture) => "Architecture",
-                nameof(RenderingPipeline) => "Rendering Pipeline",
-                _ => "Introduction"
-            };
-        }
-
-        #endregion
-
         #region Instance methods
-
-        private void AddInformationBreadcrumb(string? currentAction)
-        {
-            string actionName = string.IsNullOrWhiteSpace(currentAction) ? nameof(Introduction) : currentAction;
-
-            AddBreadcrumb(
-                new UrlActionItem().WithUrl("/").SetTitle("Home").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_house)),
-                new AspRouteActionItem("DocumentationHome", "Index").SetTitle("Documentation").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_book)),
-                new AspRouteActionItem("DocumentationBuilder", nameof(Introduction)).SetTitle("DocumentationBuilder").SetIcon(IconStruct.Bootstrap("bi-file-earmark-richtext")),
-                new AspRouteActionItem("DocumentationBuilder", actionName).SetTitle(ResolveBreadcrumbTitle(actionName)).SetIcon(ResolveBreadcrumbIcon(actionName))
-            );
-        }
 
         /// <summary>
         ///     Renders the DocumentationBuilder architecture page.
@@ -95,19 +56,6 @@ namespace DMBDocumentationBuilderLabs.Controllers
             SetDescription("DocumentationBuilder");
             SetKeywords("DocumentationBuilder", "DMBDocumentationBuilder", "NuGet", "API Documentation");
             return View();
-        }
-
-        /// <summary>
-        ///     Configures the DocumentationBuilder module sidebar before rendering an action.
-        /// </summary>
-        /// <param name="context">The current action execution context.</param>
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
-            base.OnActionExecuting(context);
-            string? currentController = context.RouteData.Values["controller"]?.ToString();
-            string? currentAction = context.RouteData.Values["action"]?.ToString();
-            SetSidebar(DocumentationModuleSidebarAgent.CreateSidebar(currentController, currentAction));
-            AddInformationBreadcrumb(currentAction);
         }
 
         /// <summary>

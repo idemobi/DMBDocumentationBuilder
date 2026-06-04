@@ -10,7 +10,6 @@
 using DMBBootstrapBuilder;
 using DMBPageBuilder;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 #endregion
 
@@ -33,20 +32,6 @@ namespace DMBDocumentationBuilderLabs.Controllers
             SetTitle("Documentation");
             SetKeywords("Documentation", "DocumentationBuilder", "DocumentationViewer", "SearchBuilder", "SearchViewer", "API Reference");
             return View();
-        }
-
-        /// <summary>
-        ///     Configures the documentation overview sidebar and breadcrumb.
-        /// </summary>
-        /// <param name="context">The current action execution context.</param>
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
-            base.OnActionExecuting(context);
-            SetSidebar(DocumentationModuleSidebarAgent.CreateRootSidebar());
-            AddBreadcrumb(
-                new UrlActionItem().WithUrl("/").SetTitle("Home").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_house)),
-                new AspRouteActionItem("DocumentationHome", nameof(Index)).SetTitle("Documentation").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_book))
-            );
         }
 
         #endregion
