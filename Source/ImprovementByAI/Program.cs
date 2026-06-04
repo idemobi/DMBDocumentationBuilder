@@ -13,7 +13,7 @@ using DMBDocumentationImprovementByOllama;
 
 #endregion
 
-ProjectFileHelper.EnsureDocumentationDatabasesCopyAlways("../../../../../../labs_idemobi_com/labs_idemobi_com.csproj", true);
+ProjectFileHelper.EnsureDocumentationDatabasesCopyAlways("../../../../../../labs_idemobi_com/Source/labs_idemobi_com.csproj", true);
 
 int numberOfObjectToProcess = 60;
 
