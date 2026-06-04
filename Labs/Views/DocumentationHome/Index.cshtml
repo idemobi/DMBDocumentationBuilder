@@ -1,0 +1,240 @@
+@using DMBBootstrapBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Documentation", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:The pipeline that extracts, stores, renders and queries developer documentation.
+            }
+        }
+    }
+}
+
+@* ── Modules ── *@
+@using (Html.BlockBuilder().AsSectionContentTop().Begin())
+{
+    @using (Html.RowBuilder().AsPillarGrid().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-journal-code fs-2 text-primary d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:DocumentationBuilder
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Build-time tooling that reads .NET projects, XML comments and symbols, then produces structured documentation data.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationBuilder", "Introduction").SetTitle("Introduction").SetIcon(IconStruct.Bootstrap("bi-arrow-right")).SetVariant(VariantStyle.Primary).SetOutlined()).Render()
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-stars fs-2 text-primary d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:DocumentationImprovementByAI
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Console tooling that enriches generated documentation databases with AI-assisted summaries, keywords and context.
+                    }
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-eye fs-2 text-success d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:DocumentationViewer
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Runtime tooling that displays generated documentation inside the website with routes, pages, sidebars and MCP tools.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationViewer", "Introduction").SetTitle("Introduction").SetIcon(IconStruct.Bootstrap("bi-arrow-right")).SetVariant(VariantStyle.Success).SetOutlined()).Render()
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-signpost-split fs-2 text-warning d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:SearchBuilder
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Build-time tooling that crawls the website and writes a weighted search index for runtime providers.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("SearchBuilder", "Introduction").SetTitle("Introduction").SetIcon(IconStruct.Bootstrap("bi-arrow-right")).SetVariant(VariantStyle.Warning).SetOutlined()).Render()
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-search fs-2 text-info d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:SearchViewer
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Runtime tooling that injects navbar search, queries providers and renders scored search results.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("SearchViewer", "Introduction").SetTitle("Introduction").SetIcon(IconStruct.Bootstrap("bi-arrow-right")).SetVariant(VariantStyle.Info).SetOutlined()).Render()
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-clipboard2-data fs-2 text-secondary d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:Coverage Example
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Generated documentation for a fixture project that covers modifiers, member kinds, XML comments and metadata edge cases.
+                    }
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-book fs-2 text-secondary d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:API Reference
+                    }
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Generated package reference for the documented namespaces and objects in the current documentation database.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("Documentation", "Index").SetTitle("Browse").SetIcon(IconStruct.Bootstrap("bi-arrow-right")).SetVariant(VariantStyle.Secondary).SetOutlined()).Render()
+                }
+            }
+        }
+    }
+}
+
+@* ── How it fits ── *@
+@using (Html.BlockBuilder().AsSectionContent().Begin())
+{
+    @using (Html.BlockBuilder().AsInfoCallout().Begin())
+    {
+        @using (Html.FlexBlockBuilder().Begin())
+        {
+            @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+            {
+                @using (Html.PB_Span().AddClass("bi bi-diagram-3 fs-2 text-info").Begin()) { }
+            }
+            @using (Html.BlockBuilder().Begin())
+            {
+                @Html.TitleBuilder().SetTitle("How the pieces fit together", TitleLevel.Five).AsAlertHeading().Render()
+                @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                {
+                    @using (Html.PB_Span().AsBold().Begin())
+                    {
+                        @:1.
+                    }
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:DocumentationBuilder
+                    }
+                    @: — extracts source metadata and writes the documentation database.
+                }
+                @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                {
+                    @using (Html.PB_Span().AsBold().Begin())
+                    {
+                        @:2.
+                    }
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:DocumentationViewer
+                    }
+                    @: — loads that database and renders navigable documentation pages.
+                }
+                @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                {
+                    @using (Html.PB_Span().AsBold().Begin())
+                    {
+                        @:3.
+                    }
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:SearchBuilder
+                    }
+                    @: — crawls the website and writes a weighted search database.
+                }
+                @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                {
+                    @using (Html.PB_Span().AsBold().Begin())
+                    {
+                        @:4.
+                    }
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:DocumentationImprovementByAI
+                    }
+                    @: — enriches generated documentation entries with AI-generated summaries and keywords.
+                }
+                @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                {
+                    @using (Html.PB_Span().AsBold().Begin())
+                    {
+                        @:5.
+                    }
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:SearchViewer
+                    }
+                    @: — queries providers and displays scored results in the navbar and results page.
+                }
+            }
+        }
+    }
+}

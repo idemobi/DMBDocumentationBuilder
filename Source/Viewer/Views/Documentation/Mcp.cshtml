@@ -1,0 +1,224 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBPageBuilder
+@model DMBDocumentationViewer.DocumentationMcpPageViewModel
+@{
+    Layout = "_Layout";
+}
+
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AddClass("text-center").Begin())
+        {
+            @(Html.TitleBuilder()
+                .SetTitle("Connect an AI assistant with MCP", TitleLevel.One)
+                .SetIcon(IconStruct.Bootstrap("bi-plug"))
+                .Render())
+
+            @using (Html.PB_P().AddClass("lead").Begin())
+            {
+                @:Query API documentation, project context, and captured C# source files through the site MCP endpoint.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col8, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @Html.TitleBuilder().SetTitle("MCP endpoint", TitleLevel.Two).AddClass("mb-4").Render()
+
+            @using (Html.PB_P().Begin())
+            {
+                @:Add this HTTP MCP server endpoint to a compatible AI client.
+            }
+
+            @(Html.CodeBlock(Model.EndpointUrl, CodeLanguage.PlainText)
+                .SetTitle("HTTP MCP endpoint")
+                .SetCopyButton())
+
+            @using (Html.AlertBuilder()
+                .SetTitle("Connection details")
+                .SetVariant(VariantStyle.Info)
+                .SetIcon(IconStruct.Bootstrap("bi-info-circle"))
+                .Begin())
+            {
+                <hr />
+                @using (Html.PB_Ul().Begin())
+                {
+                    @using (Html.PB_Li().Begin())
+                    {
+                        @:Transport: HTTP
+                    }
+                    @using (Html.PB_Li().Begin())
+                    {
+                        @:Mode: stateless server transport
+                    }
+                    @using (Html.PB_Li().Begin())
+                    {
+                        @:Data source: generated DocumentationBuilder SQLite snapshots
+                    }
+                }
+            }
+
+            @Html.TitleBuilder().SetTitle("Recommended AI instruction", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+            @(Html.CodeBlock(Model.RecommendedInstruction, CodeLanguage.PlainText)
+                .SetTitle("Assistant instruction")
+                .SetCopyButton())
+
+            @Html.TitleBuilder().SetTitle("Examples for this documentation", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+            @foreach (string example in Model.Examples)
+            {
+                @(Html.CodeBlock(example, CodeLanguage.PlainText)
+                    .SetCompact()
+                    .SetCopyButton())
+            }
+
+            @Html.TitleBuilder().SetTitle("Available tools", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+            @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+            {
+                @using (Html.PB_Thead().Begin())
+                {
+                    @using (Html.PB_Tr().Begin())
+                    {
+                        @using (Html.PB_Th().Begin())
+                        {
+                            @:Tool
+                        }
+                        @using (Html.PB_Th().Begin())
+                        {
+                            @:Purpose
+                        }
+                        @using (Html.PB_Th().Begin())
+                        {
+                            @:Contract
+                        }
+                    }
+                }
+                @using (Html.PB_Tbody().Begin())
+                {
+                    @foreach (DMBDocumentationViewer.DocumentationMcpToolContract tool in Model.Tools)
+                    {
+                        @using (Html.PB_Tr().Begin())
+                        {
+                            @using (Html.PB_Td().Begin())
+                            {
+                                <code>@tool.Name</code>
+                            }
+                            @using (Html.PB_Td().Begin())
+                            {
+                                @tool.Description
+                            }
+                            @using (Html.PB_Td().Begin())
+                            {
+                                @(Html.CodeBlock(tool.Contract, CodeLanguage.CSharp)
+                                    .SetCompact()
+                                    .SetCopyButton())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @using (Html.BlockBuilder().AddClass("sticky-top").SetStyle("top", "130px").Begin())
+            {
+                @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Current Scope", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-bullseye")).Render()
+
+                    @using (Html.BlockBuilder().AddClass("border-top py-2 small").Begin())
+                    {
+                        <strong>Group</strong>
+                        <div class="font-monospace">@Model.GroupName</div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.PackageId))
+                    {
+                        @using (Html.BlockBuilder().AddClass("border-top py-2 small").Begin())
+                        {
+                            <strong>Package</strong>
+                            <div class="font-monospace">@Model.PackageId</div>
+                        }
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Version))
+                    {
+                        @using (Html.BlockBuilder().AddClass("border-top py-2 small").Begin())
+                        {
+                            <strong>Version</strong>
+                            <div class="font-monospace">@Model.Version</div>
+                        }
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.NamespaceName))
+                    {
+                        @using (Html.BlockBuilder().AddClass("border-top py-2 small").Begin())
+                        {
+                            <strong>Namespace</strong>
+                            <div class="font-monospace">@Model.NamespaceName</div>
+                        }
+                    }
+                }
+
+                @using (Html.AlertBuilder()
+                    .SetTitle("Tool selection")
+                    .SetVariant(VariantStyle.Secondary)
+                    .SetIcon(IconStruct.Bootstrap("bi-signpost-split"))
+                    .Begin())
+                {
+                    <hr />
+                    @using (Html.PB_Ul().Begin())
+                    {
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>BuildCodingContext</code>
+                            @: for implementation, refactoring, and deduplication.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>SearchSourceCode</code>
+                            @: and
+                            <code>GetSourceFile</code>
+                            @: when exact C# source files are needed.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>BuildContextBundle</code>
+                            @: for one documented type.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>SearchApiOperations</code>
+                            @: and
+                            <code>GetApiOperation</code>
+                            @: for REST API contracts imported from OpenAPI.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>SearchDocumentation</code>
+                            @: and
+                            <code>ListNamespaceObjects</code>
+                            @: for API discovery.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>GetProjectContext</code>
+                            @: before suggesting code changes.
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>DMBDocumentationTest</RootNamespace>
+        <Title>DMBDocumentationTest</Title>
+        <Description>Coverage sample project for DocumentationBuilder and DocumentationViewer XML documentation, API, and OpenAPI scenarios.</Description>
+        <PackageId>DMBDocumentationTest</PackageId>
+        <PackageTags>idemobi DMB Documentation Test Sample XML OpenAPI Coverage</PackageTags>
+    </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>default</LangVersion>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Version>0.2.0</Version>
+        <FileVersion>0.2.0.0</FileVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <Company>idéMobi</Company>
+        <Authors>Jean-François CONTART, Quentin BOULOGNE, Camille GOLLIOT</Authors>
+        <Copyright>Copyright © $(Company) $([System.DateTime]::UtcNow.ToString("yyyy"))</Copyright>
+        <NeutralLanguage>en</NeutralLanguage>
+    </PropertyGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup Label="Project file exclusions">
+        <None Remove=".gitignore" />
+    </ItemGroup>
+</Project>

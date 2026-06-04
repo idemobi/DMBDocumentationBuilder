@@ -1,0 +1,150 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Getting Started — DocumentationBuilder", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:Generate the documentation database consumed by DocumentationViewer.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).Begin())
+        {
+            @* ── Step 1 ── *@
+            @Html.TitleBuilder().SetTitle("1. Install the NuGet Package", TitleLevel.Two).AsSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:DMBDocumentationBuilder
+                }
+                @: is a build-time tool. Add it to your generator or pre-build project — not the website itself.
+            }
+            @(Html.CodeBlock("dotnet add package DMBDocumentationBuilder", CodeLanguage.Bash)
+                .SetTitle("Install DMBDocumentationBuilder")
+                .SetCopyButton())
+
+            @* ── Step 2 ── *@
+            @Html.TitleBuilder().SetTitle("2. Enable XML Documentation", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:For rich API pages, each documented project should generate XML documentation files. Add this to every project you want to document.
+            }
+            @(Html.CodeBlock(@"<PropertyGroup>
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+</PropertyGroup>", CodeLanguage.Xml)
+                .SetTitle("Project file (.csproj)")
+                .SetCopyButton())
+
+            @* ── Step 3 ── *@
+            @Html.TitleBuilder().SetTitle("3. Define Project Descriptors", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Create documentation descriptors for the projects to extract. Keep display names stable because they become part of the generated documentation structure and URL routes.
+            }
+            @(Html.CodeBlock(@"DocumentationProjectDescriptor pageBuilder = new()
+{
+    DisplayName = ""DMBPageBuilder"",
+    ProjectFilePath = ""../../../../DMBPageBuilder/Source/DMBPageBuilder.csproj""
+};", CodeLanguage.CSharp)
+                .SetTitle("Project descriptor")
+                .SetCopyButton())
+
+            @* ── Step 4 ── *@
+            @Html.TitleBuilder().SetTitle("4. Run the Launcher", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Run the documentation launcher against the target website. The launcher extracts API metadata and writes the SQLite database and sidebar provider into the website.
+            }
+            @(Html.CodeBlock(@"DocumentationLauncher.Run(
+    ""../../../../labs_idemobi_com"",
+    groups
+);", CodeLanguage.CSharp)
+                .SetTitle("Generator entry point")
+                .SetCopyButton())
+
+            @* ── Key Classes callout ── *@
+            @using (Html.BlockBuilder().AsInfoCallout().Begin())
+            {
+                @using (Html.FlexBlockBuilder().Begin())
+                {
+                    @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                    {
+                        @using (Html.PB_Span().AddClass("bi bi-collection-fill fs-2 text-info").Begin()) { }
+                    }
+                    @using (Html.BlockBuilder().Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("Key Classes", TitleLevel.Five).AsAlertHeading().Render()
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DocumentationLauncher.Run(...)
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DocumentationProjectDescriptor
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DocumentationGroup
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:GenerateDocumentationFile
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:PreBuilding project
+                            }
+                        }
+                    }
+                }
+            }
+
+            @* ── Next Step ── *@
+            @using (Html.BlockBuilder().AsSidebarNote().Begin())
+            {
+                @using (Html.BlockBuilder().AsTextCenter().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Understand how it works under the hood?", TitleLevel.Four).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Understand how DocumentationBuilder extracts and normalizes project API data.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationBuilder", "Architecture").SetTitle("Architecture").SetIcon(IconStruct.Bootstrap("bi-diagram-3")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}

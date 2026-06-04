@@ -191,7 +191,7 @@ Customizations must remain:
 
 If public extraction behavior, rendering behavior, documentation metadata behavior, path behavior, sidebar behavior, or persistence behavior changes, update in the same change set:
 
-- local `README.md`,
+- local `Source/Builder/README.md`,
 - relevant XML docs,
 - impacted guidance/examples.
 

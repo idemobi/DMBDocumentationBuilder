@@ -1,0 +1,414 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "DMBDocumentationTest REST API",
+    "version": "0.2.0",
+    "description": "OpenAPI coverage document used to validate DocumentationBuilder and DocumentationViewer REST API rendering."
+  },
+  "servers": [
+    {
+      "url": "https://labs.idemobi.com",
+      "description": "Documentation host"
+    }
+  ],
+  "security": [
+    { "apiKey": [] }
+  ],
+  "paths": {
+    "/api/v{version}/players": {
+      "get": {
+        "operationId": "listPlayers",
+        "tags": ["Players"],
+        "summary": "List players",
+        "description": "Lists players with paging, query filters, header metadata and cancellation support.",
+        "parameters": [
+          { "name": "version", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/DocumentationTestPlayerStatus" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "format": "int32", "minimum": 1, "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "format": "int32", "minimum": 1, "maximum": 100, "default": 25 } },
+          { "name": "tags", "in": "query", "schema": { "type": "array", "items": { "type": "string" } } },
+          { "name": "X-Correlation-Id", "in": "header", "schema": { "type": "string" }, "description": "Optional trace identifier propagated through logs and responses." },
+          { "name": "X-Client-Version", "in": "header", "schema": { "type": "string", "default": "2026.05" }, "description": "Optional client version used by support diagnostics." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged players.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentationTestPlayerPagedResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPlayer",
+        "tags": ["Players"],
+        "summary": "Create a player",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentationTestPlayerRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created player.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DocumentationTestPlayerDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation problem.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v{version}/players/{playerId}": {
+      "get": {
+        "operationId": "getPlayer",
+        "tags": ["Players"],
+        "summary": "Get one player",
+        "parameters": [
+          { "name": "version", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "playerId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Player found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestPlayerDto" } } } },
+          "404": { "description": "Player not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      },
+      "put": {
+        "operationId": "replacePlayer",
+        "tags": ["Players"],
+        "summary": "Replace one player",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "version", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "playerId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateDocumentationTestPlayerRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Player replaced.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestPlayerDto" } } } },
+          "404": { "description": "Player not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      },
+      "patch": {
+        "operationId": "patchPlayer",
+        "tags": ["Players"],
+        "summary": "Patch one player",
+        "parameters": [
+          { "name": "playerId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PatchDocumentationTestPlayerRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Patch accepted." },
+          "400": { "description": "Validation problem.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" } } } }
+        }
+      },
+      "delete": {
+        "operationId": "deletePlayer",
+        "tags": ["Players"],
+        "summary": "Delete one player",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "playerId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Player deleted." },
+          "404": { "description": "Player not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
+    "/api/organizations/{organizationId}/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "tags": ["Projects"],
+        "summary": "List organization projects",
+        "parameters": [
+          { "name": "organizationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "includeArchived", "in": "query", "schema": { "type": "boolean", "default": false } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project list.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/DocumentationTestProjectDto" } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createProject",
+        "tags": ["Projects"],
+        "summary": "Create organization project",
+        "parameters": [
+          { "name": "organizationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentationTestProjectRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Project created.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestProjectDto" } } } }
+        }
+      }
+    },
+    "/api/organizations/{organizationId}/projects/{projectId}": {
+      "get": {
+        "operationId": "getProject",
+        "tags": ["Projects"],
+        "summary": "Get one organization project",
+        "parameters": [
+          { "name": "organizationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Project found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestProjectDto" } } } },
+          "404": { "description": "Project not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
+    "/api/assets": {
+      "post": {
+        "operationId": "uploadAsset",
+        "tags": ["Assets"],
+        "summary": "Upload one asset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/DocumentationTestAssetUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Upload accepted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestAssetUploadResponse" } } } },
+          "400": { "description": "Validation problem.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" } } } }
+        }
+      }
+    },
+    "/api/assets/{assetId}/download": {
+      "get": {
+        "operationId": "downloadAsset",
+        "tags": ["Assets"],
+        "summary": "Download one asset",
+        "parameters": [
+          { "name": "assetId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Plain text file.", "content": { "text/plain": { "schema": { "type": "string", "format": "binary" } } } },
+          "404": { "description": "Asset not found.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
+    "/api/diagnostics/health": {
+      "get": {
+        "operationId": "health",
+        "tags": ["Diagnostics"],
+        "summary": "Health check",
+        "security": [],
+        "responses": {
+          "204": { "description": "Healthy." }
+        }
+      }
+    },
+    "/api/diagnostics/errors/{code}": {
+      "get": {
+        "operationId": "getError",
+        "tags": ["Diagnostics"],
+        "summary": "Get typed error",
+        "parameters": [
+          { "name": "code", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "400": { "description": "Typed error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentationTestErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/diagnostics/problem": {
+      "get": {
+        "operationId": "getProblem",
+        "tags": ["Diagnostics"],
+        "summary": "Get problem details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "Authorization", "in": "header", "required": true, "schema": { "type": "string" }, "description": "Bearer token formatted as: Bearer {token}." }
+        ],
+        "responses": {
+          "409": { "description": "Problem details.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key",
+        "description": "API key supplied by trusted server-side clients."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT bearer token sent with the Authorization header."
+      }
+    },
+    "schemas": {
+      "DocumentationTestPlayerStatus": {
+        "type": "string",
+        "enum": ["Active", "Suspended", "Archived"]
+      },
+      "DocumentationTestPlayerDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "status": { "$ref": "#/components/schemas/DocumentationTestPlayerStatus" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "updatedUtc": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DocumentationTestPlayerPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/DocumentationTestPlayerDto" } },
+          "page": { "type": "integer", "format": "int32" },
+          "pageSize": { "type": "integer", "format": "int32" },
+          "totalCount": { "type": "integer", "format": "int32" }
+        }
+      },
+      "CreateDocumentationTestPlayerRequest": {
+        "type": "object",
+        "required": ["displayName", "email"],
+        "properties": {
+          "displayName": { "type": "string", "minLength": 2, "maxLength": 120 },
+          "email": { "type": "string", "format": "email" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "UpdateDocumentationTestPlayerRequest": {
+        "type": "object",
+        "required": ["displayName"],
+        "properties": {
+          "displayName": { "type": "string", "minLength": 2, "maxLength": 120 },
+          "status": { "$ref": "#/components/schemas/DocumentationTestPlayerStatus" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "PatchDocumentationTestPlayerRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/DocumentationTestPlayerStatus" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "DocumentationTestProjectDto": {
+        "type": "object",
+        "properties": {
+          "organizationId": { "type": "string", "format": "uuid" },
+          "projectId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "isArchived": { "type": "boolean" }
+        }
+      },
+      "CreateDocumentationTestProjectRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "isArchived": { "type": "boolean" }
+        }
+      },
+      "DocumentationTestAssetUploadRequest": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string", "format": "binary" },
+          "title": { "type": "string" },
+          "isPublic": { "type": "boolean" }
+        }
+      },
+      "DocumentationTestAssetUploadResponse": {
+        "type": "object",
+        "properties": {
+          "assetId": { "type": "string", "format": "uuid" },
+          "fileName": { "type": "string" },
+          "contentType": { "type": "string" },
+          "length": { "type": "integer", "format": "int64" }
+        }
+      },
+      "DocumentationTestErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "traceId": { "type": "string" }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "integer", "format": "int32" },
+          "detail": { "type": "string" },
+          "instance": { "type": "string" }
+        }
+      },
+      "ValidationProblemDetails": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ProblemDetails" },
+          {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

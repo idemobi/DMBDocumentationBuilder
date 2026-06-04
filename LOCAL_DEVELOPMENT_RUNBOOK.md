@@ -9,7 +9,7 @@ Guide local development for `DMBDocumentationBuilder` changes.
 When copying this file to another DocumentationBuilder ecosystem project, update this section first.
 
 - Project name: `DMBDocumentationBuilder`
-- Main code areas: `General/`, `Shared/`, `ForClass/`, `ForRecord/`, `ForStruct/`, `ForInterface/`, `ForEnum/`, and `DocumentationLauncher.cs`.
+- Main code areas: `Source/Builder/General/`, `Source/Builder/Shared/`, `Source/Builder/ForClass/`, `Source/Builder/ForRecord/`, `Source/Builder/ForStruct/`, `Source/Builder/ForInterface/`, `Source/Builder/ForEnum/`, and `Source/Builder/DocumentationLauncher.cs`.
 - Main risk areas: generated HTML output, metadata ordering, path stability, XML comment rendering, project reference resolution, sidebar generation, and SQLite persistence.
 - Documentation target: `labs_idemobi_com`
 

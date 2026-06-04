@@ -1,0 +1,295 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Introduction — DocumentationBuilder", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:Generate structured API documentation from .NET projects.
+            }
+            @using (Html.FlexBlockBuilder().SetJustifyContentCenter().WithGap(Old_Gap.Gap2).Begin())
+            {
+                @Html.Button(ActionItemFactory.AspRoute("DocumentationBuilder", "GettingStarted").SetTitle("Get Started").SetIcon(IconStruct.Bootstrap("bi-play-fill")).SetVariant(VariantStyle.Primary)).Render()
+                @Html.Button(ActionItemFactory.AspRoute("Documentation", "Index").SetTitle("Browse API Reference").SetIcon(IconStruct.Bootstrap("bi-journal-code")).SetVariant(VariantStyle.Secondary).SetOutlined()).Render()
+            }
+        }
+    }
+}
+
+@* ── 3 highlights ── *@
+@using (Html.BlockBuilder().AsSectionContentTop().Begin())
+{
+    @using (Html.RowBuilder().AsPillarGrid().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-database fs-2 text-primary d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:Roslyn-Backed Extraction
+                    }
+                    @using (Html.PB_P().AsSmallMuted().AsNoMargin().Begin())
+                    {
+                        @:Reads real type information from .NET projects — not just string-parsed XML files.
+                    }
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-archive fs-2 text-success d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:SQLite Storage
+                    }
+                    @using (Html.PB_P().AsSmallMuted().AsNoMargin().Begin())
+                    {
+                        @:A portable, queryable database that can be shipped with the application or regenerated on demand.
+                    }
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-eye fs-2 text-warning d-block mb-2").Begin()) { }
+                    @using (Html.PB_Span().AsSemiBold().Begin())
+                    {
+                        @:Viewer-Ready Output
+                    }
+                    @using (Html.PB_P().AsSmallMuted().AsNoMargin().Begin())
+                    {
+                        @:Database and sidebar provider plug directly into DocumentationViewer with no transformation step.
+                    }
+                }
+            }
+        }
+    }
+}
+
+@* ── What is + preview ── *@
+@using (Html.BlockBuilder().AsSectionContent().Begin())
+{
+    @using (Html.RowBuilder().SetGapY(Gap.G5).SetAlignItems(AlignItems.Center).Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col7, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @Html.TitleBuilder().SetTitle("What is DocumentationBuilder?", TitleLevel.Two).AsSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @using (Html.PB_Span().AsBold().Begin())
+                {
+                    @:DMBDocumentationBuilder
+                }
+                @: extracts documentation data from .NET projects and prepares it for rendering by the DMB documentation experience.
+                @: It uses Roslyn and SQLite to turn project context, XML comments, namespaces and documented objects into a queryable documentation database.
+            }
+            @using (Html.PB_P().Begin())
+            {
+                @:Use it as the build-time or pre-build part of your documentation workflow. It is the package that understands source projects and produces the structured data later consumed by
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:DMBDocumentationViewer
+                }
+                @:.
+            }
+            @using (Html.BlockBuilder().AsBenefitRow().Begin())
+            {
+                @using (Html.PB_Span().AddClass("bi bi-check-circle-fill text-success me-3 mt-1").Begin()) { }
+                @using (Html.BlockBuilder().Begin())
+                {
+                    @:Roslyn-backed extraction reads real type information from
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:.csproj
+                    }
+                    @: files
+                }
+            }
+            @using (Html.BlockBuilder().AsBenefitRow().Begin())
+            {
+                @using (Html.PB_Span().AddClass("bi bi-check-circle-fill text-success me-3 mt-1").Begin()) { }
+                @using (Html.BlockBuilder().Begin())
+                {
+                    @:Generated SQLite database is portable and queryable at runtime
+                }
+            }
+            @using (Html.BlockBuilder().AsBenefitRow().Begin())
+            {
+                @using (Html.PB_Span().AddClass("bi bi-check-circle-fill text-success me-3 mt-1").Begin()) { }
+                @using (Html.BlockBuilder().Begin())
+                {
+                    @:Sidebar provider integrates directly with
+                    @using (Html.PB_Span().AsMonospace().Begin())
+                    {
+                        @:DocumentationViewer
+                    }
+                    @: — no manual sync required
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col5, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @using (Html.BlockBuilder().AsSidebarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsPaddedBlock().Begin())
+                {
+                    @(Html.CodeBlock(@"DocumentationLauncher.Run(
+    ""../../../../labs_idemobi_com"",
+    groups
+);", CodeLanguage.CSharp))
+                    @using (Html.PB_P().AsSmallMuted().AsNoMargin().Begin())
+                    {
+                        @:Run from a generator project against the target website.
+                    }
+                }
+            }
+        }
+    }
+}
+
+@* ── Three Pillars ── *@
+@using (Html.BlockBuilder().AsSectionContent().Begin())
+{
+    @using (Html.BlockBuilder().AsTextCenter().Begin())
+    {
+        @Html.TitleBuilder().SetTitle("Three Pillars of DocumentationBuilder", TitleLevel.Two).AsSectionHeading().Render()
+        @using (Html.PB_P().AsMuted().Begin())
+        {
+            @:DocumentationBuilder covers three stages of the documentation generation pipeline.
+        }
+    }
+    @using (Html.RowBuilder().AsPillarGrid().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsPillarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsTopMargin().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-database text-primary me-1").Begin()) { }
+                    @Html.TitleBuilder().SetTitle("Project Extraction", TitleLevel.Five).AsCompact().Render()
+                }
+                @using (Html.PB_P().AsSmallMuted().Begin())
+                {
+                    @:Reads project descriptors, namespaces, classes, records, structs, interfaces, enums and members via Roslyn.
+                }
+                @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                {
+                    @:DocumentationLauncher
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsPillarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsTopMargin().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-archive text-success me-1").Begin()) { }
+                    @Html.TitleBuilder().SetTitle("Documentation Database", TitleLevel.Five).AsCompact().Render()
+                }
+                @using (Html.PB_P().AsSmallMuted().Begin())
+                {
+                    @:Stores extracted metadata in SQLite so documentation can be rendered and searched consistently across the site.
+                }
+                @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                {
+                    @:SQLite output
+                }
+            }
+        }
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+        {
+            @using (Html.BlockBuilder().AsPillarCard().Begin())
+            {
+                @using (Html.BlockBuilder().AsTopMargin().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-eye text-warning me-1").Begin()) { }
+                    @Html.TitleBuilder().SetTitle("Viewer Ready", TitleLevel.Five).AsCompact().Render()
+                }
+                @using (Html.PB_P().AsSmallMuted().Begin())
+                {
+                    @:Produces data and sidebar information that can be consumed directly by DocumentationViewer inside an ASP.NET Core site.
+                }
+                @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                {
+                    @:SidebarProvider
+                }
+            }
+        }
+    }
+}
+
+@* ── Philosophy + Next Step ── *@
+@using (Html.BlockBuilder().AsSectionContent().Begin())
+{
+    @using (Html.FlexBlockBuilder().WithGap(Old_Gap.Gap3).SetAlignItemsStretch().Begin())
+    {
+        @using (Html.BlockBuilder().AsInfoCallout().SetStyle("margin", "0").SetStyle("flex", "2").Begin())
+        {
+            @using (Html.FlexBlockBuilder().Begin())
+            {
+                @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-lightbulb-fill fs-2 text-info").Begin()) { }
+                }
+                @using (Html.BlockBuilder().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Core Philosophy", TitleLevel.Four).AsAlertHeading().Render()
+                    @using (Html.PB_P().AsNoMargin().Begin())
+                    {
+                        @:We believe documentation should be extracted from the source of truth, not maintained separately. When you annotate public members with XML comments and run
+                        @using (Html.PB_Span().AsMonospace().Begin())
+                        {
+                            @:DocumentationLauncher.Run(...)
+                        }
+                        @:, the documentation database reflects the actual API surface — no manual sync required.
+                    }
+                }
+            }
+        }
+        @using (Html.BlockBuilder().AsSidebarCard().SetStyle("flex", "1").Begin())
+        {
+            @using (Html.BlockBuilder().AsPaddedBlock().SetStyle("height", "100%").Begin())
+            {
+                @using (Html.FlexBlockBuilder().SetFlexColumn().SetAlignItemsStart().SetJustifyContentCenter().SetStyle("height", "100%").Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Next Step", TitleLevel.Five).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Use the
+                        @using (Html.PB_Span().AsMonospace().Begin())
+                        {
+                            @:PreBuilding
+                        }
+                        @: project as the reference integration point and generate your first database.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationBuilder", "GettingStarted").SetTitle("Getting Started").SetIcon(IconStruct.Bootstrap("bi-play-fill")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}

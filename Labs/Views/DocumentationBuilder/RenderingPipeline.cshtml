@@ -1,0 +1,145 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Rendering Pipeline — DocumentationBuilder", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:From source projects to a generated documentation database.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).Begin())
+        {
+            @* ── Step 1 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:1
+                }
+                @Html.TitleBuilder().SetTitle("Define Groups", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:The generator declares documentation groups and project descriptors. Each descriptor identifies a source project, its package name, version and extraction mode. Keep display names stable — they become part of the documentation URL routes.
+                }
+                @(Html.CodeBlock(@"DocumentationProjectDescriptor pageBuilder = new()
+{
+    DisplayName = ""DMBPageBuilder"",
+    ProjectFilePath = ""../../../../DMBPageBuilder/Source/DMBPageBuilder.csproj""
+};
+
+DocumentationGroup nugetGroup = new(""NuGet"")
+{
+    Projects = { pageBuilder, bootstrapBuilder }
+};", CodeLanguage.CSharp))
+            }
+
+            @* ── Step 2 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:2
+                }
+                @Html.TitleBuilder().SetTitle("Read Project Context", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:DocumentationBuilder loads project files, XML documentation and compile items for each descriptor. Roslyn-backed extraction produces documentation objects, namespace models and group structures from the source projects.
+                }
+                @(Html.CodeBlock(@"<!-- Enable XML docs on each documented project -->
+<PropertyGroup>
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+</PropertyGroup>", CodeLanguage.Xml))
+            }
+
+            @* ── Step 3 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:3
+                }
+                @Html.TitleBuilder().SetTitle("Extract &amp; Normalize Symbols", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:Types, members, namespaces, signatures, XML comments and keywords are extracted into documentation models. Normalized documentation is persisted into the target SQLite database and the generated sidebar provider is written.
+                }
+                @(Html.CodeBlock(@"// Extracts namespaces, types, members, comments and keywords
+// Writes SQLite output + generated sidebar source
+DocumentationLauncher.Run(
+    ""../../../../labs_idemobi_com"",
+    groups
+);", CodeLanguage.CSharp))
+            }
+
+            @* ── Step 4 (final) ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge("bg-success").Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-check").Begin()) { }
+                }
+                @Html.TitleBuilder().SetTitle("Documentation Ready for Runtime", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:The generated database and sidebar provider are placed directly in the target website. DocumentationViewer reads that output at runtime — no deployment step required beyond building the website.
+                }
+                @(Html.CodeBlock(@"// After generation, the website registers the sidebar
+using DocumentationBuilders.Documentation;
+DocumentationSidebarProvider.Register();", CodeLanguage.CSharp))
+            }
+
+            @* ── Performance highlight ── *@
+            @using (Html.BlockBuilder().AsInfoCallout().Begin())
+            {
+                @using (Html.FlexBlockBuilder().Begin())
+                {
+                    @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                    {
+                        @using (Html.PB_Span().AddClass("bi bi-lightning-charge-fill fs-2 text-warning").Begin()) { }
+                    }
+                    @using (Html.BlockBuilder().Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("Build Once, Serve Always", TitleLevel.Five).AsAlertHeading().Render()
+                        @using (Html.PB_P().AsNoMargin().Begin())
+                        {
+                            @:The generation pipeline runs at build or release time — the website serves pre-generated data with no runtime extraction overhead.
+                        }
+                    }
+                }
+            }
+
+            @* ── Next Step ── *@
+            @using (Html.BlockBuilder().AsSidebarNote().Begin())
+            {
+                @using (Html.BlockBuilder().AsTextCenter().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Learn how DocumentationViewer consumes the data", TitleLevel.Four).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Learn how DocumentationViewer consumes the generated database at runtime.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationViewer", "GettingStarted").SetTitle("DocumentationViewer").SetIcon(IconStruct.Bootstrap("bi-eye")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}

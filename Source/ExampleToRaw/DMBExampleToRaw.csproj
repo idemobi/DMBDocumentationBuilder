@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>DMBExampleToRaw</RootNamespace>
+        <Title>DMBExampleToRaw</Title>
+        <PackageTags>idemobi DMB PageBuilder Documentation Examples Razor RawSource Generator</PackageTags>
+        <Description>Example extraction package that mirrors Razor example partials into raw source files for documentation pages.</Description>
+        <PackageReleaseNotes>note</PackageReleaseNotes>
+        <PackageIcon>DMBExampleToRaw.png</PackageIcon>
+        <AssemblyOriginatorKeyFile>DMBExampleToRaw.snk</AssemblyOriginatorKeyFile>
+        <PackageId>DMBExampleToRaw</PackageId>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>default</LangVersion>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <SignAssembly>true</SignAssembly>
+        <PublicSign>true</PublicSign>
+        <Configurations>Debug;Release;NuGet</Configurations>
+        <Platforms>AnyCPU</Platforms>
+        <Version>0.13.0</Version>
+        <FileVersion>0.13.0.0</FileVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <Company>idéMobi</Company>
+        <Authors>Jean-François CONTART, Quentin BOULOGNE, Camille GOLLIOT</Authors>
+        <Copyright>Copyright © $(Company) $([System.DateTime]::UtcNow.ToString("yyyy"))</Copyright>
+        <NeutralLanguage>en</NeutralLanguage>
+        <PackageProjectUrl>https://dev.azure.com/ideMobi/DMBExampleToRaw/_git/DMBExampleToRaw</PackageProjectUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>git@ssh.dev.azure.com:v3/ideMobi/DMBExampleToRaw/DMBExampleToRaw</RepositoryUrl>
+        <RepositoryType>AzureDevOps</RepositoryType>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <GenerateAssemblyMetadataAttribute>true</GenerateAssemblyMetadataAttribute>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DefineConstants/>
+        <DocumentationFile>bin\Release\net10.0\DMBExampleToRaw.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DocumentationFile>bin\Debug\net10.0\DMBExampleToRaw.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'NuGet' ">
+        <DefineConstants>NUGET</DefineConstants>
+        <Optimize>true</Optimize>
+        <DocumentationFile>bin\NuGet\net10.0\DMBExampleToRaw.xml</DocumentationFile>
+    </PropertyGroup>
+    <ItemGroup Label="Files in package">
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="LICENSE.md" Pack="true" PackagePath="\"/>
+        <None Include="DMBExampleToRaw.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+    <ItemGroup Label="Project file exclusions">
+        <None Remove=".gitignore" />
+    </ItemGroup>
+</Project>

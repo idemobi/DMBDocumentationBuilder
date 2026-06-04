@@ -1,0 +1,741 @@
+#region Copyright
+
+// ©2002-2026 idéMobi
+// www.idemobi.com
+
+#endregion
+
+#region
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
+
+#endregion
+
+namespace DMBDocumentationImprovementByOpenAI
+{
+    /// <summary>
+    ///     Runs OpenAI documentation improvement against a generated documentation database.
+    /// </summary>
+    public static class OpenAIRuntime
+    {
+        #region Table
+
+        private static string GetAIDatabasePath(string mainDatabasePath, OpenAIModel model)
+        {
+            string mainDirectory = Path.GetDirectoryName(mainDatabasePath)
+                                   ?? throw new InvalidOperationException("Unable to resolve database directory.");
+
+            string fileName = $"OpenAI_{model}.db";
+
+            return Path.Combine(mainDirectory, "AI", "OpenAI", fileName);
+        }
+
+        private static void EnsureOpenAITable(SqliteConnection connection)
+        {
+            const string sql = @"
+CREATE TABLE IF NOT EXISTS DocumentationAIResult
+(
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    DocumentationObjectId INTEGER NOT NULL,
+    RoutePath TEXT NOT NULL,
+
+    AISummary TEXT NOT NULL DEFAULT '',
+    AISummaryShort TEXT NOT NULL DEFAULT '',
+    AIKeywords TEXT NOT NULL DEFAULT '',
+    AIContentLastHash TEXT NOT NULL DEFAULT '',
+    AIUpdatedAt TEXT NOT NULL DEFAULT '',
+    AIModel TEXT NOT NULL DEFAULT '',
+    AIEmbedding BLOB NULL,
+
+    UNIQUE(DocumentationObjectId)
+);
+";
+            using var command = new SqliteCommand(sql, connection);
+            command.ExecuteNonQuery();
+        }
+
+        private static void EnsureRenderSourcesTable(SqliteConnection connection)
+        {
+            const string sql = @"
+CREATE TABLE IF NOT EXISTS DocumentationAIRenderSources
+(
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Provider TEXT NOT NULL,
+    Model TEXT NOT NULL,
+    DatabasePath TEXT NOT NULL,
+    IsEnabled INTEGER NOT NULL DEFAULT 1,
+    CreatedUtc TEXT NOT NULL DEFAULT '',
+    UpdatedUtc TEXT NOT NULL DEFAULT '',
+    UNIQUE(Provider, Model)
+);
+
+CREATE INDEX IF NOT EXISTS IX_DocumentationAIRenderSources_IsEnabled
+ON DocumentationAIRenderSources (IsEnabled);
+";
+            using var command = new SqliteCommand(sql, connection);
+            command.ExecuteNonQuery();
+        }
+
+        private static string GetRelativeAIDatabasePath(string mainDatabasePath, string aiDatabasePath)
+        {
+            string mainDatabaseDirectory = Path.GetDirectoryName(mainDatabasePath)
+                                           ?? throw new InvalidOperationException("Unable to resolve main database directory.");
+
+            return Path.GetRelativePath(mainDatabaseDirectory, aiDatabasePath);
+        }
+
+        private static void RegisterRenderSource(
+            string mainDatabasePath,
+            string provider,
+            string model,
+            string aiDatabasePath
+        )
+        {
+            using var connection = new SqliteConnection($"Data Source={mainDatabasePath}");
+            connection.Open();
+
+            EnsureRenderSourcesTable(connection);
+
+            string relativeDatabasePath = GetRelativeAIDatabasePath(mainDatabasePath, aiDatabasePath);
+
+            const string sql = @"
+INSERT INTO DocumentationAIRenderSources
+(
+    Provider,
+    Model,
+    DatabasePath,
+    IsEnabled,
+    CreatedUtc,
+    UpdatedUtc
+)
+VALUES
+(
+    @Provider,
+    @Model,
+    @DatabasePath,
+    1,
+    @NowUtc,
+    @NowUtc
+)
+ON CONFLICT(Provider, Model) DO UPDATE SET
+    DatabasePath = excluded.DatabasePath,
+    IsEnabled = excluded.IsEnabled,
+    UpdatedUtc = excluded.UpdatedUtc;
+";
+
+            using var command = new SqliteCommand(sql, connection);
+
+            string nowUtc = DateTime.UtcNow.ToString("O");
+
+            command.Parameters.AddWithValue("@Provider", provider);
+            command.Parameters.AddWithValue("@Model", model);
+            command.Parameters.AddWithValue("@DatabasePath", relativeDatabasePath);
+            command.Parameters.AddWithValue("@NowUtc", nowUtc);
+
+            command.ExecuteNonQuery();
+        }
+
+        #endregion
+
+        #region Public methods
+
+        /// <summary>
+        ///     Runs OpenAI documentation improvement synchronously.
+        /// </summary>
+        public static void Run(OpenAIOptions options)
+        {
+            Console.WriteLine("Starting OpenAI runtime...");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("⚠️ You need an OPENAI_API_KEY environment variable or ApiKey set in OpenAIOptions.");
+            Console.ResetColor();
+
+            RunAsync(options).GetAwaiter().GetResult();
+
+            Console.WriteLine("Finished OpenAI runtime.");
+        }
+
+        /// <summary>
+        ///     Runs OpenAI documentation improvement asynchronously.
+        /// </summary>
+        /// <returns>A task that completes when documentation improvement finishes.</returns>
+        public static async Task RunAsync(OpenAIOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            if (string.IsNullOrWhiteSpace(options.DatabasePath))
+            {
+                throw new ArgumentException("DatabasePath is required.", nameof(options));
+            }
+
+            string mainDatabasePath = Path.GetFullPath(options.DatabasePath);
+            string aiDatabasePath = GetAIDatabasePath(mainDatabasePath, options.Model);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(aiDatabasePath)!);
+
+            using (var bootstrapConnection = new SqliteConnection($"Data Source={aiDatabasePath}"))
+            {
+                await bootstrapConnection.OpenAsync();
+                EnsureOpenAITable(bootstrapConnection);
+            }
+
+            RegisterRenderSource(
+                mainDatabasePath,
+                provider: "OpenAI",
+                model: options.Model.ToString(),
+                aiDatabasePath: aiDatabasePath);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+            OpenAIModel currentModel = options.Model;
+            string currentModelName = currentModel.ToModelString();
+
+            Console.WriteLine($"[OPENAI] Main DB: {mainDatabasePath}");
+            Console.WriteLine($"[OPENAI] AI DB:   {aiDatabasePath}");
+            Console.WriteLine($"[OPENAI] Model:   {currentModelName}");
+
+            var generator = new OpenAITextGenerator(currentModel, options.ApiKey);
+            var databaseImprover = new DocumentationDatabaseImprover(mainDatabasePath, aiDatabasePath);
+
+            List<DocumentationObjectRow> rows = await databaseImprover.LoadObjectsAsync(
+                options.MaxObjectsToProcess,
+                cancellationToken);
+
+            Dictionary<long, string> existingHashes = await databaseImprover.LoadOpenAIHashesAsync(cancellationToken);
+
+            Console.WriteLine($"[OPENAI] {rows.Count} object(s) loaded.");
+
+            int i = 0;
+
+            foreach (DocumentationObjectRow row in rows)
+            {
+                i++;
+
+                try
+                {
+                    string currentHash = DocumentationDatabaseImprover.ComputeHash(
+                        row,
+                        options.ProjectContextPrompt,
+                        options.SummaryPrompt,
+                        options.ShortSummaryPrompt,
+                        options.KeywordsPrompt);
+
+                    existingHashes.TryGetValue(row.Id, out string? existingHash);
+
+                    if (!options.ForceRegenerate &&
+                        string.Equals(existingHash, currentHash, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    Console.WriteLine($"[OPENAI n° {i}] Processing {row.NamespaceName}.{row.ObjectName} ({row.ObjectType})");
+
+                    string summary = await generator.GenerateTextAsync(
+                        DocumentationPromptFactory.BuildSummaryPrompt(
+                            row,
+                            options.ProjectContextPrompt,
+                            options.SummaryPrompt,
+                            options.MaxModelJsonLength),
+                        options.RequestTimeout,
+                        cancellationToken);
+
+                    string shortSummary = await generator.GenerateTextAsync(
+                        DocumentationPromptFactory.BuildShortSummaryPrompt(
+                            row,
+                            options.ProjectContextPrompt,
+                            options.ShortSummaryPrompt,
+                            options.MaxModelJsonLength),
+                        options.RequestTimeout,
+                        cancellationToken);
+
+                    string aiKeywords = await generator.GenerateTextAsync(
+                        DocumentationPromptFactory.BuildKeywordsPrompt(
+                            row,
+                            options.ProjectContextPrompt,
+                            options.KeywordsPrompt,
+                            options.MaxModelJsonLength),
+                        options.RequestTimeout,
+                        cancellationToken);
+
+                    await databaseImprover.UpsertOpenAIAsync(
+                        row.Id,
+                        row.RoutePath,
+                        summary,
+                        shortSummary,
+                        aiKeywords,
+                        currentHash,
+                        currentModelName,
+                        cancellationToken);
+
+                    existingHashes[row.Id] = currentHash;
+                }
+                catch (Exception exception)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"[OPENAI][ERROR] Failed for {row.NamespaceName}.{row.ObjectName} ({row.ObjectType})");
+                    Console.WriteLine(exception.Message);
+                    Console.ResetColor();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Nested types
+
+        private sealed class DocumentationDatabaseImprover
+        {
+            #region Instance constructors and destructors
+
+            #region Constructor
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="DocumentationDatabaseImprover" /> class.
+            /// </summary>
+            public DocumentationDatabaseImprover(string mainDatabasePath, string aiDatabasePath)
+            {
+                _mainDatabasePath = mainDatabasePath;
+                _aiDatabasePath = aiDatabasePath;
+            }
+
+            #endregion
+
+            #endregion
+
+            #region Fields
+
+            private readonly string _mainDatabasePath;
+            private readonly string _aiDatabasePath;
+
+            #endregion
+
+            #region Public methods
+
+            /// <summary>
+            ///     Loads documentation database rows required for AI improvement.
+            /// </summary>
+            /// <returns>The loaded database rows.</returns>
+            public async Task<List<DocumentationObjectRow>> LoadObjectsAsync(
+                int maxObjectsToProcess,
+                CancellationToken cancellationToken
+            )
+            {
+                using var connection = new SqliteConnection($"Data Source={_mainDatabasePath}");
+                await connection.OpenAsync(cancellationToken);
+
+                string sql = """
+                             SELECT
+                                 Id,
+                                 PackageId,
+                                 Version,
+                                 NamespaceName,
+                                 ObjectName,
+                                 ObjectType,
+                                 RoutePath,
+                                 ModelInJson,
+                                 TechnicalKeywords,
+                                 Keywords
+                             FROM DocumentationObjects
+                             ORDER BY Id
+                             """ + (maxObjectsToProcess > 0 ? $" LIMIT {maxObjectsToProcess}" : string.Empty) + ";";
+
+                using var command = new SqliteCommand(sql, connection);
+                using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+                var result = new List<DocumentationObjectRow>();
+
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    result.Add(new DocumentationObjectRow
+                    {
+                        Id = reader.GetInt64(0),
+                        PackageId = reader.GetString(1),
+                        Version = reader.GetString(2),
+                        NamespaceName = reader.GetString(3),
+                        ObjectName = reader.GetString(4),
+                        ObjectType = reader.GetString(5),
+                        RoutePath = reader.GetString(6),
+                        ModelInJson = reader.GetString(7),
+                        TechnicalKeywords = reader.GetString(8),
+                        Keywords = reader.GetString(9)
+                    });
+                }
+
+                return result;
+            }
+
+            public async Task<Dictionary<long, string>> LoadOpenAIHashesAsync(CancellationToken cancellationToken)
+            {
+                using var connection = new SqliteConnection($"Data Source={_aiDatabasePath}");
+                await connection.OpenAsync(cancellationToken);
+
+                EnsureOpenAITable(connection);
+
+                const string sql = """
+                                   SELECT DocumentationObjectId, AIContentLastHash
+                                   FROM DocumentationAIResult;
+                                   """;
+
+                using var command = new SqliteCommand(sql, connection);
+                using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+                var result = new Dictionary<long, string>();
+
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    result[reader.GetInt64(0)] = reader.GetString(1);
+                }
+
+                return result;
+            }
+
+            /// <summary>
+            ///     Inserts or updates OpenAI AI output for a documentation object.
+            /// </summary>
+            /// <returns>A task that completes when the row has been stored.</returns>
+            public async Task UpsertOpenAIAsync(
+                long id,
+                string routePath,
+                string aiSummary,
+                string aiSummaryShort,
+                string aiKeywords,
+                string aiContentLastHash,
+                string modelName,
+                CancellationToken cancellationToken
+            )
+            {
+                using var connection = new SqliteConnection($"Data Source={_aiDatabasePath}");
+                await connection.OpenAsync(cancellationToken);
+
+                EnsureOpenAITable(connection);
+
+                const string sql = @"
+INSERT INTO DocumentationAIResult
+(
+    DocumentationObjectId,
+    RoutePath,
+    AISummary,
+    AISummaryShort,
+    AIKeywords,
+    AIContentLastHash,
+    AIUpdatedAt,
+    AIModel,
+    AIEmbedding
+)
+VALUES
+(
+    @Id,
+    @RoutePath,
+    @AISummary,
+    @AISummaryShort,
+    @AIKeywords,
+    @AIContentLastHash,
+    @AIUpdatedAt,
+    @AIModel,
+    NULL
+)
+ON CONFLICT(DocumentationObjectId) DO UPDATE SET
+    RoutePath = excluded.RoutePath,
+    AISummary = excluded.AISummary,
+    AISummaryShort = excluded.AISummaryShort,
+    AIKeywords = excluded.AIKeywords,
+    AIContentLastHash = excluded.AIContentLastHash,
+    AIUpdatedAt = excluded.AIUpdatedAt,
+    AIModel = excluded.AIModel,
+    AIEmbedding = excluded.AIEmbedding;
+";
+
+                using var command = new SqliteCommand(sql, connection);
+
+                command.Parameters.AddWithValue("@Id", id);
+                command.Parameters.AddWithValue("@RoutePath", routePath);
+                command.Parameters.AddWithValue("@AISummary", aiSummary);
+                command.Parameters.AddWithValue("@AISummaryShort", aiSummaryShort);
+                command.Parameters.AddWithValue("@AIKeywords", aiKeywords);
+                command.Parameters.AddWithValue("@AIContentLastHash", aiContentLastHash);
+                command.Parameters.AddWithValue("@AIUpdatedAt", DateTime.UtcNow.ToString("O"));
+                command.Parameters.AddWithValue("@AIModel", modelName);
+
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            /// <summary>
+            ///     Computes the hash used to detect whether AI output is stale.
+            /// </summary>
+            /// <returns>A stable hash for the documentation object and prompt inputs.</returns>
+            public static string ComputeHash(
+                DocumentationObjectRow row,
+                string projectContextPrompt,
+                string summaryPrompt,
+                string shortSummaryPrompt,
+                string keywordsPrompt
+            )
+            {
+                string raw = string.Join("\n", new[]
+                {
+                    row.PackageId,
+                    row.Version,
+                    row.NamespaceName,
+                    row.ObjectName,
+                    row.ObjectType,
+                    row.RoutePath,
+                    row.ModelInJson,
+                    row.TechnicalKeywords,
+                    row.Keywords,
+                    projectContextPrompt,
+                    summaryPrompt,
+                    shortSummaryPrompt,
+                    keywordsPrompt
+                });
+
+                byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
+                return Convert.ToHexString(hash);
+            }
+
+            #endregion
+        }
+
+        private static class DocumentationPromptFactory
+        {
+            #region Static methods
+
+            #region Private methods
+
+            private static string LimitText(string value, int maxLength)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    return string.Empty;
+                }
+
+                if (maxLength <= 0 || value.Length <= maxLength)
+                {
+                    return value;
+                }
+
+                return value[..maxLength] + "\n...[TRUNCATED]";
+            }
+
+            #endregion
+
+            #endregion
+
+            #region Public methods
+
+            /// <summary>
+            ///     Builds the build summary prompt for AI generation.
+            /// </summary>
+            /// <returns>The prompt text sent to the AI model.</returns>
+            public static string BuildSummaryPrompt(
+                DocumentationObjectRow row,
+                string projectContextPrompt,
+                string customPrompt,
+                int maxModelJsonLength
+            )
+            {
+                return $"""
+                        You are a technical documentation assistant for a generated C#/.NET documentation database.
+
+                        Global rules:
+                        - Return plain text only
+                        - No markdown
+                        - No bullet list
+                        - 3 to 6 sentences
+                        - Explain the role of the object
+                        - Explain how it is likely used
+                        - Be precise and conservative
+                        - Avoid generic filler
+                        - Do not invent APIs not visible in the input
+
+                        Project context:
+                        {projectContextPrompt}
+
+                        Task-specific instructions:
+                        {customPrompt}
+
+                        Object metadata:
+                        PackageId: {row.PackageId}
+                        Version: {row.Version}
+                        Namespace: {row.NamespaceName}
+                        ObjectName: {row.ObjectName}
+                        ObjectType: {row.ObjectType}
+                        RoutePath: {row.RoutePath}
+
+                        Technical keywords:
+                        {row.TechnicalKeywords}
+
+                        Functional keywords:
+                        {row.Keywords}
+
+                        Serialized model:
+                        {LimitText(row.ModelInJson, maxModelJsonLength)}
+                        """;
+            }
+
+            /// <summary>
+            ///     Builds the build short summary prompt for AI generation.
+            /// </summary>
+            /// <returns>The prompt text sent to the AI model.</returns>
+            public static string BuildShortSummaryPrompt(
+                DocumentationObjectRow row,
+                string projectContextPrompt,
+                string customPrompt,
+                int maxModelJsonLength
+            )
+            {
+                return $"""
+                        You are a technical documentation assistant for a generated C#/.NET documentation database.
+
+                        Global rules:
+                        - Return plain text only
+                        - Exactly one sentence
+                        - Maximum 220 characters
+                        - Neutral technical tone
+                        - Focus on the primary responsibility of the object
+                        - Be precise and conservative
+
+                        Project context:
+                        {projectContextPrompt}
+
+                        Task-specific instructions:
+                        {customPrompt}
+
+                        Object metadata:
+                        PackageId: {row.PackageId}
+                        Version: {row.Version}
+                        Namespace: {row.NamespaceName}
+                        ObjectName: {row.ObjectName}
+                        ObjectType: {row.ObjectType}
+                        RoutePath: {row.RoutePath}
+
+                        Technical keywords:
+                        {row.TechnicalKeywords}
+
+                        Functional keywords:
+                        {row.Keywords}
+
+                        Serialized model:
+                        {LimitText(row.ModelInJson, maxModelJsonLength)}
+                        """;
+            }
+
+            /// <summary>
+            ///     Builds the build keywords prompt for AI generation.
+            /// </summary>
+            /// <returns>The prompt text sent to the AI model.</returns>
+            public static string BuildKeywordsPrompt(
+                DocumentationObjectRow row,
+                string projectContextPrompt,
+                string customPrompt,
+                int maxModelJsonLength
+            )
+            {
+                return $"""
+                        You are a technical documentation assistant for a generated C#/.NET documentation database.
+
+                        Global rules:
+                        - Return plain text only
+                        - Return a single comma-separated line
+                        - Between 5 and 15 keywords
+                        - No numbering
+                        - No explanations
+                        - No markdown
+                        - Prefer stable technical terms
+                        - Avoid empty generic words
+
+                        Project context:
+                        {projectContextPrompt}
+
+                        Task-specific instructions:
+                        {customPrompt}
+
+                        Object metadata:
+                        PackageId: {row.PackageId}
+                        Version: {row.Version}
+                        Namespace: {row.NamespaceName}
+                        ObjectName: {row.ObjectName}
+                        ObjectType: {row.ObjectType}
+                        RoutePath: {row.RoutePath}
+
+                        Technical keywords:
+                        {row.TechnicalKeywords}
+
+                        Functional keywords:
+                        {row.Keywords}
+
+                        Serialized model:
+                        {LimitText(row.ModelInJson, maxModelJsonLength)}
+                        """;
+            }
+
+            #endregion
+        }
+
+        private sealed class DocumentationObjectRow
+        {
+            #region Instance fields and properties
+
+            /// <summary>
+            ///     Gets or sets the documentation object database identifier.
+            /// </summary>
+            public long Id { get; set; }
+
+            /// <summary>
+            ///     Gets or sets human-readable keywords generated or stored for the documentation object.
+            /// </summary>
+            public string Keywords { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the serialized source model used as AI prompt input.
+            /// </summary>
+            public string ModelInJson { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the namespace name for the documentation object.
+            /// </summary>
+            public string NamespaceName { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the documented object name.
+            /// </summary>
+            public string ObjectName { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the documented object type.
+            /// </summary>
+            public string ObjectType { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the package identifier for the documentation object.
+            /// </summary>
+            public string PackageId { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the route path that displays the documentation object.
+            /// </summary>
+            public string RoutePath { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets technical keywords extracted from the documentation object.
+            /// </summary>
+            public string TechnicalKeywords { get; set; } = string.Empty;
+
+            /// <summary>
+            ///     Gets or sets the package version for the documentation object.
+            /// </summary>
+            public string Version { get; set; } = string.Empty;
+
+            #endregion
+        }
+
+        #endregion
+    }
+}

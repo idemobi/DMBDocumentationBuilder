@@ -1,0 +1,55 @@
+[data-doc-display-root][hidden] {
+    display: none !important;
+}
+
+[data-doc-display-root][data-doc-display-disabled="true"] {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+[data-doc-display-root][data-doc-display-disabled="true"] > button,
+[data-doc-display-root][data-doc-display-disabled="true"] > a {
+    pointer-events: none;
+}
+
+[data-doc-display-action].disabled {
+    pointer-events: none;
+}
+
+[data-doc-display-counter] .badge {
+    min-width: 2.6rem;
+}
+
+[data-doc-display-toggle]:disabled + .form-check-label,
+[data-doc-display-toggle]:disabled {
+    opacity: .45;
+}
+
+[data-doc-filter-hidden="true"],
+[data-doc-section-hidden="true"],
+[data-doc-group-hidden="true"] {
+    display: none !important;
+}
+
+.documentation-markdown-body {
+    max-width: 72rem;
+}
+
+.documentation-markdown-body > * + * {
+    margin-top: 1rem;
+}
+
+.documentation-markdown-body h2,
+.documentation-markdown-body h3,
+.documentation-markdown-body h4 {
+    margin-top: 2rem;
+}
+
+.documentation-markdown-code {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    color: var(--bs-body-color);
+    overflow-x: auto;
+    padding: 1rem;
+}

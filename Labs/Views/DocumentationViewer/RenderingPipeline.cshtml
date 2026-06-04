@@ -1,0 +1,138 @@
+﻿@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Rendering Pipeline — DocumentationViewer", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:From generated documentation data to routed pages and MCP tools.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).Begin())
+        {
+            @* ── Step 1 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:1
+                }
+                @Html.TitleBuilder().SetTitle("Receive Request", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:The pipeline starts when a user opens a documentation route, or when an MCP client calls one of the registered documentation tools. MVC routes identify the documentation group, package, namespace or object requested.
+                }
+                @(Html.CodeBlock(@"// Documentation route examples
+// /Documentation/Index
+// /Documentation/ShowGroup?groupName=NuGet
+// /Documentation/ShowNamespace?packageId=DMBPageBuilder&namespaceName=DMBPageBuilder
+// /Documentation/ShowObject?objectId=42", CodeLanguage.CSharp))
+            }
+
+            @* ── Step 2 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:2
+                }
+                @Html.TitleBuilder().SetTitle("Query Documentation Data", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:The viewer reads generated SQLite documentation data and project context. Route values identify documentation scope. Generated database rows become viewer page models that are passed to Razor views.
+                }
+                @(Html.CodeBlock(@"// Controller queries the generated SQLite database
+var namespaceData = _documentationService
+    .GetNamespace(packageId, namespaceName);
+
+var viewModel = new NamespaceViewModel(namespaceData);", CodeLanguage.CSharp))
+            }
+
+            @* ── Step 3 ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge().Begin())
+                {
+                    @:3
+                }
+                @Html.TitleBuilder().SetTitle("Build Navigation &amp; Render Page", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:The registered sidebar provider supplies the documentation navigation for the current context. Sidebar provider output becomes BootstrapBuilder navigation sections. Razor, BootstrapBuilder and PageBuilder produce the final documentation page.
+                }
+                @(Html.CodeBlock(@"// The sidebar provider is registered at startup
+// It maps documentation structure into navigation items
+DocumentationSidebarProvider.Register();", CodeLanguage.CSharp))
+            }
+
+            @* ── Step 4 (final) ── *@
+            @using (Html.BlockBuilder().AsTimelineStep().Begin())
+            {
+                @using (Html.BlockBuilder().AsTimelineStepBadge("bg-success").Begin())
+                {
+                    @using (Html.PB_Span().AddClass("bi bi-check").Begin()) { }
+                }
+                @Html.TitleBuilder().SetTitle("Expose MCP Tools", TitleLevel.Three).AsH4().Render()
+                @using (Html.PB_P().Begin())
+                {
+                    @:MCP tools provide documentation lookup capabilities through the configured endpoint. Connected agents can query API summaries, method signatures, namespace structures and cross-package relationships.
+                }
+                @(Html.CodeBlock(@"// MCP tools are registered by DMBDocumentationViewerConfiguration
+// Endpoint mapped by UseApp(app)
+// Tools: GetNamespace, GetObject, SearchDocumentation …", CodeLanguage.CSharp))
+            }
+
+            @* ── Performance highlight ── *@
+            @using (Html.BlockBuilder().AsInfoCallout().Begin())
+            {
+                @using (Html.FlexBlockBuilder().Begin())
+                {
+                    @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                    {
+                        @using (Html.PB_Span().AddClass("bi bi-lightning-charge-fill fs-2 text-warning").Begin()) { }
+                    }
+                    @using (Html.BlockBuilder().Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("AI-Ready Documentation", TitleLevel.Five).AsAlertHeading().Render()
+                        @using (Html.PB_P().AsNoMargin().Begin())
+                        {
+                            @:MCP tools make the documentation database queryable by AI agents — no scraping, no guessing, just structured API context on demand.
+                        }
+                    }
+                }
+            }
+
+            @* ── Next Step ── *@
+            @using (Html.BlockBuilder().AsSidebarNote().Begin())
+            {
+                @using (Html.BlockBuilder().AsTextCenter().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Browse the API Reference", TitleLevel.Four).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:See the pipeline in action by navigating the live documentation.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("Documentation", "Index").SetTitle("API Reference").SetIcon(IconStruct.Bootstrap("bi-journal-code")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}

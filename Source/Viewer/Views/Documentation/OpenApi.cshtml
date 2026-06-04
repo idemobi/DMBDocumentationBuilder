@@ -1,0 +1,843 @@
+@using System.Text.Json
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBPageBuilder
+@model DMBDocumentationViewer.DocumentationOpenApiPageViewModel
+@{
+    Layout = "_Layout";
+
+    string MethodVariant(string method)
+    {
+        return method.ToUpperInvariant() switch
+        {
+            "GET" => "text-bg-success",
+            "POST" => "text-bg-primary",
+            "PUT" => "text-bg-warning",
+            "PATCH" => "text-bg-info",
+            "DELETE" => "text-bg-danger",
+            _ => "text-bg-secondary"
+        };
+    }
+
+    string ResponseVariant(string code)
+    {
+        return code switch
+        {
+            "default" => "text-bg-secondary",
+            _ when code.StartsWith("2", StringComparison.Ordinal) => "text-bg-success",
+            _ when code.StartsWith("3", StringComparison.Ordinal) => "text-bg-info",
+            _ when code.StartsWith("4", StringComparison.Ordinal) => "text-bg-warning",
+            _ when code.StartsWith("5", StringComparison.Ordinal) => "text-bg-danger",
+            _ => "text-bg-secondary"
+        };
+    }
+
+    IReadOnlyList<string> ReadArrayValues(string json)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+
+            if (document.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            return document.RootElement
+                .EnumerateArray()
+                .Where(element => element.ValueKind == JsonValueKind.String)
+                .Select(element => element.GetString() ?? string.Empty)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToArray();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    string PrimaryTag(DMBDocumentationViewer.DocumentationOpenApiOperationQueryResult operation)
+    {
+        return ReadArrayValues(operation.TagsJson).FirstOrDefault() ?? "Operations";
+    }
+
+    string PreserveSidebar(string routePath)
+    {
+        if (string.IsNullOrWhiteSpace(Model.SidebarNamespaceName))
+        {
+            return routePath;
+        }
+
+        string separator = routePath.Contains("?", StringComparison.Ordinal) ? "&" : "?";
+
+        return routePath + separator + "sidebarNamespaceName=" + Uri.EscapeDataString(Model.SidebarNamespaceName);
+    }
+
+    IReadOnlyList<IGrouping<string, DMBDocumentationViewer.DocumentationOpenApiOperationQueryResult>> operationsByTag = Model.Operations
+        .GroupBy(PrimaryTag, StringComparer.Ordinal)
+        .OrderBy(group => group.Key, StringComparer.Ordinal)
+        .ToArray();
+}
+
+@using (Html.SectionBuilder().SetHeight(150, UnitSize.px).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AddClass("text-center").Begin())
+        {
+            @(Html.TitleBuilder()
+                .SetTitle(Model.HasSelectedOperation ? $"{Model.SelectedOperation!.HttpMethod} {Model.SelectedOperation.Path}" : Model.Document.Title, TitleLevel.One)
+                .SetIcon(IconStruct.Bootstrap("bi-hdd-network"))
+                .Render())
+
+            @using (Html.PB_P().AddClass("lead mb-0").Begin())
+            {
+                if (Model.HasSelectedOperation)
+                {
+                    @Model.SelectedOperation!.Summary
+                }
+                else
+                {
+                    @Model.Document.Description
+                }
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col8, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @if (!Model.HasSelectedOperation)
+            {
+                @using (Html.RowBuilder().Begin())
+                {
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col3, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Operations", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-signpost")).Render()
+                            <div class="display-6 fw-semibold">@Model.Operations.Count</div>
+                        }
+                    }
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col3, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Tags", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-tags")).Render()
+                            <div class="display-6 fw-semibold">@operationsByTag.Count</div>
+                        }
+                    }
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col3, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Package", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-box")).Render()
+                            <div class="font-monospace small">@Model.Document.PackageId</div>
+                        }
+                    }
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col3, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Version", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-git")).Render()
+                            <div class="font-monospace small">@Model.Document.Version</div>
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("REST operations", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+                @if (operationsByTag.Count == 0)
+                {
+                    @using (Html.AlertBuilder()
+                        .SetTitle("No operation indexed")
+                        .SetVariant(VariantStyle.Warning)
+                        .SetIcon(IconStruct.Bootstrap("bi-exclamation-triangle"))
+                        .Begin())
+                    {
+                        <hr />
+                        @:The OpenAPI document was imported, but no REST operation was found under its paths section.
+                    }
+                }
+                else
+                {
+                    @foreach (IGrouping<string, DMBDocumentationViewer.DocumentationOpenApiOperationQueryResult> tagGroup in operationsByTag)
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                        {
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                                @Html.TitleBuilder().SetTitle(tagGroup.Key, TitleLevel.Four).SetIcon(IconStruct.Bootstrap("bi-tag")).AddClass("mb-0").Render()
+                                <span class="badge text-bg-light border">@tagGroup.Count() operations</span>
+                            </div>
+
+                            @using (Html.TableBuilder().SetResponsiveAlways().SetHover().Begin())
+                            {
+                                @using (Html.PB_Thead().Begin())
+                                {
+                                    @using (Html.PB_Tr().Begin())
+                                    {
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Method
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Path
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Summary
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Operation
+                                        }
+                                    }
+                                }
+                                @using (Html.PB_Tbody().Begin())
+                                {
+                                    @foreach (DMBDocumentationViewer.DocumentationOpenApiOperationQueryResult operation in tagGroup)
+                                    {
+                                        @using (Html.PB_Tr().Begin())
+                                        {
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <span class="badge @MethodVariant(operation.HttpMethod)">@operation.HttpMethod</span>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <code>@operation.Path</code>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @operation.Summary
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <a class="btn btn-sm btn-outline-primary" href="@PreserveSidebar(operation.RoutePath)">
+                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                    Open
+                                                </a>
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("Raw OpenAPI document", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+                @(Html.CodeBlock(Model.Document.JsonContent, CodeLanguage.Json)
+                    .SetTitle($"{Model.Document.DocumentName}.openapi.json")
+                    .SetCopyButton())
+            }
+            else
+            {
+                DMBDocumentationViewer.DocumentationOpenApiOperationQueryResult operation = Model.SelectedOperation!;
+                DMBDocumentationViewer.DocumentationOpenApiOperationDisplayModel contract = Model.SelectedOperationDisplay;
+                IReadOnlyList<string> tags = ReadArrayValues(operation.TagsJson);
+                IReadOnlyList<string> responses = contract.Responses.Select(response => response.StatusCode).ToArray();
+                int parameterCount = contract.Parameters.Count;
+                int headerParameterCount = contract.HeaderParameters.Count;
+                bool hasRequestBody = contract.HasRequestBody;
+
+                @using (Html.AlertBuilder()
+                    .SetTitle("Operation contract")
+                    .SetVariant(VariantStyle.Primary)
+                    .SetIcon(IconStruct.Bootstrap("bi-bezier2"))
+                    .Begin())
+                {
+                    <hr />
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                        <span class="badge @MethodVariant(operation.HttpMethod)">@operation.HttpMethod</span>
+                        <code>@operation.Path</code>
+                        <span class="badge text-bg-secondary">@operation.OperationId</span>
+                        @foreach (string tag in tags)
+                        {
+                            <span class="badge text-bg-light border text-body">@tag</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(operation.Description))
+                    {
+                        <p class="mb-0">@operation.Description</p>
+                    }
+                }
+
+                @using (Html.RowBuilder().Begin())
+                {
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Parameters", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-sliders")).Render()
+                            <div class="display-6 fw-semibold">@parameterCount</div>
+                        }
+                    }
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Request Body", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-braces")).Render()
+                            <div class="display-6 fw-semibold">@(hasRequestBody ? "Yes" : "No")</div>
+                        }
+                    }
+                    @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Md).Begin())
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 h-100").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Responses", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-reply-all")).Render()
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (string response in responses)
+                                {
+                                    <span class="badge @ResponseVariant(response)">@response</span>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("Authentication and headers", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+                @if (!contract.HasSecurity && headerParameterCount == 0)
+                {
+                    @using (Html.AlertBuilder()
+                        .SetTitle("No authentication or header contract")
+                        .SetVariant(VariantStyle.Secondary)
+                        .SetIcon(IconStruct.Bootstrap("bi-info-circle"))
+                        .Begin())
+                    {
+                        <hr />
+                        @:This operation does not declare OpenAPI security requirements or explicit header parameters.
+                    }
+                }
+                else
+                {
+                    @if (contract.HasSecurity)
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Security requirements", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-shield-lock")).Render()
+
+                            @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+                            {
+                                @using (Html.PB_Thead().Begin())
+                                {
+                                    @using (Html.PB_Tr().Begin())
+                                    {
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Scheme
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Type
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Header
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Location
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Scopes
+                                        }
+                                    }
+                                }
+                                @using (Html.PB_Tbody().Begin())
+                                {
+                                    @foreach (DMBDocumentationViewer.DocumentationOpenApiSecurityRequirementDisplayItem requirement in contract.SecurityRequirements)
+                                    {
+                                        @using (Html.PB_Tr().Begin())
+                                        {
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <code>@requirement.SchemeName</code>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <span class="badge text-bg-primary">@requirement.Type</span>
+                                                @if (!string.IsNullOrWhiteSpace(requirement.Scheme))
+                                                {
+                                                    <div class="small text-body-secondary">@requirement.Scheme</div>
+                                                }
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @if (string.IsNullOrWhiteSpace(requirement.HeaderName))
+                                                {
+                                                    <span class="text-body-secondary">-</span>
+                                                }
+                                                else
+                                                {
+                                                    <code>@requirement.HeaderName</code>
+                                                }
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @if (string.IsNullOrWhiteSpace(requirement.Location))
+                                                {
+                                                    <span class="text-body-secondary">-</span>
+                                                }
+                                                else
+                                                {
+                                                    @requirement.Location
+                                                }
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @if (requirement.Scopes.Count == 0)
+                                                {
+                                                    <span class="text-body-secondary">-</span>
+                                                }
+                                                else
+                                                {
+                                                    @string.Join(", ", requirement.Scopes)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @if (headerParameterCount > 0)
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                        {
+                            @Html.TitleBuilder().SetTitle("Header parameters", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-card-heading")).Render()
+
+                            @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+                            {
+                                @using (Html.PB_Thead().Begin())
+                                {
+                                    @using (Html.PB_Tr().Begin())
+                                    {
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Header
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Required
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Schema
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Default
+                                        }
+                                        @using (Html.PB_Th().Begin())
+                                        {
+                                            @:Description
+                                        }
+                                    }
+                                }
+                                @using (Html.PB_Tbody().Begin())
+                                {
+                                    @foreach (DMBDocumentationViewer.DocumentationOpenApiParameterDisplayItem parameter in contract.HeaderParameters)
+                                    {
+                                        @using (Html.PB_Tr().Begin())
+                                        {
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <code>@parameter.Name</code>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <span class="badge @(parameter.Required ? "text-bg-danger" : "text-bg-secondary")">@(parameter.Required ? "Yes" : "No")</span>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                <code>@parameter.Schema</code>
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @if (string.IsNullOrWhiteSpace(parameter.DefaultValue))
+                                                {
+                                                    <span class="text-body-secondary">-</span>
+                                                }
+                                                else
+                                                {
+                                                    <code>@parameter.DefaultValue</code>
+                                                }
+                                            }
+                                            @using (Html.PB_Td().Begin())
+                                            {
+                                                @if (string.IsNullOrWhiteSpace(parameter.Description))
+                                                {
+                                                    <span class="text-body-secondary">-</span>
+                                                }
+                                                else
+                                                {
+                                                    @parameter.Description
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("Parameters", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+                @if (contract.NonHeaderParameters.Count == 0)
+                {
+                    @using (Html.BlockBuilder().AddClass("border rounded-3 p-4").Begin())
+                    {
+                        @using (Html.AlertBuilder()
+                            .SetTitle("No parameters")
+                            .SetVariant(VariantStyle.Secondary)
+                            .SetIcon(IconStruct.Bootstrap("bi-info-circle"))
+                            .Begin())
+                        {
+                            <hr />
+                            @:This operation does not declare path, query, or cookie parameters.
+                        }
+                    }
+                }
+                else
+                {
+                    @using (Html.BlockBuilder().AddClass("border rounded-3 p-4").Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("Route and query parameters", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-sliders")).Render()
+
+                        @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+                        {
+                            @using (Html.PB_Thead().Begin())
+                            {
+                                @using (Html.PB_Tr().Begin())
+                                {
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Name
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Location
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Required
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Schema
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Default
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Description
+                                    }
+                                }
+                            }
+                            @using (Html.PB_Tbody().Begin())
+                            {
+                                @foreach (DMBDocumentationViewer.DocumentationOpenApiParameterDisplayItem parameter in contract.NonHeaderParameters)
+                                {
+                                    @using (Html.PB_Tr().Begin())
+                                    {
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <code>@parameter.Name</code>
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <span class="badge text-bg-light border text-body">@parameter.Location</span>
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <span class="badge @(parameter.Required ? "text-bg-danger" : "text-bg-secondary")">@(parameter.Required ? "Yes" : "No")</span>
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <code>@parameter.Schema</code>
+                                            @if (!string.IsNullOrWhiteSpace(parameter.Format))
+                                            {
+                                                <div class="small text-body-secondary">@parameter.Format</div>
+                                            }
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            @if (string.IsNullOrWhiteSpace(parameter.DefaultValue))
+                                            {
+                                                <span class="text-body-secondary">-</span>
+                                            }
+                                            else
+                                            {
+                                                <code>@parameter.DefaultValue</code>
+                                            }
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            @if (string.IsNullOrWhiteSpace(parameter.Description))
+                                            {
+                                                <span class="text-body-secondary">-</span>
+                                            }
+                                            else
+                                            {
+                                                @parameter.Description
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("Request body", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+                @if (!contract.HasRequestBody)
+                {
+                    @using (Html.AlertBuilder()
+                        .SetTitle("No request body")
+                        .SetVariant(VariantStyle.Secondary)
+                        .SetIcon(IconStruct.Bootstrap("bi-info-circle"))
+                        .Begin())
+                    {
+                        <hr />
+                        @:This operation does not declare a request body.
+                    }
+                }
+                else
+                {
+                    @using (Html.BlockBuilder().AddClass("border rounded-3 p-4").Begin())
+                    {
+                        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                            <span class="badge @(contract.RequestBody.Required ? "text-bg-danger" : "text-bg-secondary")">@(contract.RequestBody.Required ? "Required" : "Optional")</span>
+                            @if (!string.IsNullOrWhiteSpace(contract.RequestBody.Description))
+                            {
+                                <span>@contract.RequestBody.Description</span>
+                            }
+                        </div>
+
+                        @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().Begin())
+                        {
+                            @using (Html.PB_Thead().Begin())
+                            {
+                                @using (Html.PB_Tr().Begin())
+                                {
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Content type
+                                    }
+                                    @using (Html.PB_Th().Begin())
+                                    {
+                                        @:Schema
+                                    }
+                                }
+                            }
+                            @using (Html.PB_Tbody().Begin())
+                            {
+                                @foreach (DMBDocumentationViewer.DocumentationOpenApiContentTypeDisplayItem contentType in contract.RequestBody.ContentTypes)
+                                {
+                                    @using (Html.PB_Tr().Begin())
+                                    {
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <code>@contentType.MediaType</code>
+                                        }
+                                        @using (Html.PB_Td().Begin())
+                                        {
+                                            <code>@contentType.Schema</code>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Html.TitleBuilder().SetTitle("Responses", TitleLevel.Two).AddClass("mb-4 mt-5").Render()
+
+                @if (!contract.HasResponses)
+                {
+                    @using (Html.AlertBuilder()
+                        .SetTitle("No responses")
+                        .SetVariant(VariantStyle.Warning)
+                        .SetIcon(IconStruct.Bootstrap("bi-exclamation-triangle"))
+                        .Begin())
+                    {
+                        <hr />
+                        @:This operation does not declare response contracts.
+                    }
+                }
+                else
+                {
+                    @foreach (DMBDocumentationViewer.DocumentationOpenApiResponseDisplayItem response in contract.Responses)
+                    {
+                        @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                        {
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                                <span class="badge @ResponseVariant(response.StatusCode)">@response.StatusCode</span>
+                                @if (!string.IsNullOrWhiteSpace(response.Description))
+                                {
+                                    <span>@response.Description</span>
+                                }
+                            </div>
+
+                            @if (response.ContentTypes.Count > 0)
+                            {
+                                @Html.TitleBuilder().SetTitle("Content", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-filetype-json")).Render()
+
+                                @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+                                {
+                                    @using (Html.PB_Thead().Begin())
+                                    {
+                                        @using (Html.PB_Tr().Begin())
+                                        {
+                                            @using (Html.PB_Th().Begin())
+                                            {
+                                                @:Content type
+                                            }
+                                            @using (Html.PB_Th().Begin())
+                                            {
+                                                @:Schema
+                                            }
+                                        }
+                                    }
+                                    @using (Html.PB_Tbody().Begin())
+                                    {
+                                        @foreach (DMBDocumentationViewer.DocumentationOpenApiContentTypeDisplayItem contentType in response.ContentTypes)
+                                        {
+                                            @using (Html.PB_Tr().Begin())
+                                            {
+                                                @using (Html.PB_Td().Begin())
+                                                {
+                                                    <code>@contentType.MediaType</code>
+                                                }
+                                                @using (Html.PB_Td().Begin())
+                                                {
+                                                    <code>@contentType.Schema</code>
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            @if (response.Headers.Count > 0)
+                            {
+                                @Html.TitleBuilder().SetTitle("Headers", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-card-heading")).AddClass("mt-4").Render()
+
+                                @using (Html.TableBuilder().SetResponsiveAlways().SetSmall().SetHover().Begin())
+                                {
+                                    @using (Html.PB_Thead().Begin())
+                                    {
+                                        @using (Html.PB_Tr().Begin())
+                                        {
+                                            @using (Html.PB_Th().Begin())
+                                            {
+                                                @:Name
+                                            }
+                                            @using (Html.PB_Th().Begin())
+                                            {
+                                                @:Schema
+                                            }
+                                            @using (Html.PB_Th().Begin())
+                                            {
+                                                @:Description
+                                            }
+                                        }
+                                    }
+                                    @using (Html.PB_Tbody().Begin())
+                                    {
+                                        @foreach (DMBDocumentationViewer.DocumentationOpenApiHeaderDisplayItem header in response.Headers)
+                                        {
+                                            @using (Html.PB_Tr().Begin())
+                                            {
+                                                @using (Html.PB_Td().Begin())
+                                                {
+                                                    <code>@header.Name</code>
+                                                }
+                                                @using (Html.PB_Td().Begin())
+                                                {
+                                                    <code>@header.Schema</code>
+                                                }
+                                                @using (Html.PB_Td().Begin())
+                                                {
+                                                    @header.Description
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            @if (response.ContentTypes.Count == 0 && response.Headers.Count == 0)
+                            {
+                                <div class="text-body-secondary small">No response body or headers are declared for this status code.</div>
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).SetCol(ColSize.Col4, ResponsiveBreakpoint.Lg).Begin())
+        {
+            @using (Html.BlockBuilder().AddClass("sticky-top").SetStyle("top", "130px").Begin())
+            {
+                @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("API Document", TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-filetype-json")).Render()
+                    <div class="border-top py-2 small">
+                        <strong>Document</strong>
+                        <div class="font-monospace">@Model.Document.DocumentName</div>
+                    </div>
+                    <div class="border-top py-2 small">
+                        <strong>Package</strong>
+                        <div class="font-monospace">@Model.Document.PackageId</div>
+                    </div>
+                    <div class="border-top py-2 small">
+                        <strong>Version</strong>
+                        <div class="font-monospace">@Model.Document.Version</div>
+                    </div>
+                }
+
+                @using (Html.AlertBuilder()
+                    .SetTitle("AI usage")
+                    .SetVariant(VariantStyle.Info)
+                    .SetIcon(IconStruct.Bootstrap("bi-robot"))
+                    .Begin())
+                {
+                    <hr />
+                    @using (Html.PB_Ul().Begin())
+                    {
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>SearchApiOperations</code>
+                            @: to discover REST endpoints.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>GetApiOperation</code>
+                            @: to inspect request and response contracts.
+                        }
+                        @using (Html.PB_Li().Begin())
+                        {
+                            <code>GetOpenApiDocument</code>
+                            @: to retrieve the raw OAS3 document.
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

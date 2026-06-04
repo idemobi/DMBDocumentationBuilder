@@ -1,0 +1,155 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Architecture — DocumentationBuilder", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:A build-time documentation extraction layer based on project context.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).Begin())
+        {
+            @* ── 1. Project Context Layer ── *@
+            @Html.TitleBuilder().SetTitle("1. Project Context Layer", TitleLevel.Two).AsSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @using (Html.PB_Span().AsBold().Begin())
+                {
+                    @:DMBDocumentationBuilder
+                }
+                @: is the generation layer of the documentation system. It reads .NET project context, extracts structured API information and writes the data needed by DocumentationViewer at runtime.
+                @: DocumentationBuilder should run before the website serves documentation — it owns extraction, normalization, database generation and sidebar source creation.
+            }
+            @(Html.CodeBlock(@"DocumentationProjectDescriptor pageBuilder = new()
+{
+    DisplayName = ""DMBPageBuilder"",
+    ProjectFilePath = ""../../../../DMBPageBuilder/Source/DMBPageBuilder.csproj""
+};
+
+DocumentationGroup nugetGroup = new(""NuGet"")
+{
+    Projects = { pageBuilder, bootstrapBuilder, componentBuilder }
+};", CodeLanguage.CSharp)
+                .SetTitle("Project descriptors")
+                .SetCopyButton())
+
+            @* ── 2. Extraction Layer ── *@
+            @Html.TitleBuilder().SetTitle("2. Extraction Layer", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Uses Roslyn-oriented models to extract namespaces, types, members, signatures, XML comments and keywords from the target projects. Extracted objects are normalized into documentation models before being persisted. Each documented project must have
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:GenerateDocumentationFile
+                }
+                @: enabled for full XML comment extraction.
+            }
+            @(Html.CodeBlock(@"<PropertyGroup>
+  <!-- Enable XML docs on every documented project -->
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+</PropertyGroup>", CodeLanguage.Xml)
+                .SetTitle("Project XML documentation")
+                .SetCopyButton())
+
+            @* ── 3. Output Layer ── *@
+            @Html.TitleBuilder().SetTitle("3. Output Layer", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Writes a SQLite documentation database and generated sidebar sources directly into the target website folder. DocumentationViewer reads this output at runtime — no deployment step required beyond building the website. The
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:PreBuilding
+                }
+                @: project in this repository is the reference generation pipeline.
+            }
+            @(Html.CodeBlock(@"// One call writes the database + sidebar provider
+DocumentationLauncher.Run(
+    ""../../../../labs_idemobi_com"",
+    groups
+);", CodeLanguage.CSharp)
+                .SetTitle("Generation entry point")
+                .SetCopyButton())
+
+            @* ── Tech Stack callout ── *@
+            @using (Html.BlockBuilder().AsInfoCallout().Begin())
+            {
+                @using (Html.FlexBlockBuilder().Begin())
+                {
+                    @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                    {
+                        @using (Html.PB_Span().AddClass("bi bi-gear-fill fs-2 text-info").Begin()) { }
+                    }
+                    @using (Html.BlockBuilder().Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("Tech Stack", TitleLevel.Five).AsAlertHeading().Render()
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsBold().Begin())
+                            {
+                                @:Backend:
+                            }
+                            @: .NET 10 / Roslyn
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsBold().Begin())
+                            {
+                                @:Output:
+                            }
+                            @: SQLite documentation database
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsBold().Begin())
+                            {
+                                @:Architecture:
+                            }
+                            @: Build-time generation pipeline
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsBold().Begin())
+                            {
+                                @:Integration:
+                            }
+                            @: Pre-build / release step
+                        }
+                    }
+                }
+            }
+
+            @* ── Next Step ── *@
+            @using (Html.BlockBuilder().AsSidebarNote().Begin())
+            {
+                @using (Html.BlockBuilder().AsTextCenter().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("See it in action", TitleLevel.Four).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Learn how the generation pipeline moves from source projects to a documentation database.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationBuilder", "RenderingPipeline").SetTitle("Rendering Pipeline").SetIcon(IconStruct.Bootstrap("bi-bezier2")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}

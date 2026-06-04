@@ -1,0 +1,157 @@
+﻿@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBEffectBuilder
+@using DMBPageBuilder
+@{
+    Layout = "_Layout";
+}
+
+@* ── Hero ── *@
+@using (Html.SectionBuilder().SetHeight(125, UnitSize.px).BootstrapBackgroundEffect(VariantStyle.Normal).Begin())
+{
+    @using (Html.FlexBlockBuilder().SetAlignItemsCenter().SetJustifyContentCenter().Begin())
+    {
+        @using (Html.BlockBuilder().AsTextCenter().Begin())
+        {
+            @Html.TitleBuilder().SetTitle("Getting Started — DocumentationViewer", TitleLevel.One).Render()
+            @using (Html.PB_P().AsLead().Begin())
+            {
+                @:Host generated API documentation in an ASP.NET Core website.
+            }
+        }
+    }
+}
+
+@using (Html.ContainerBuilder().SetPadding(SpacingSide.Y, SpacingSize.Five).Begin())
+{
+    @using (Html.RowBuilder().Begin())
+    {
+        @using (Html.ColBuilder().SetCol(ColSize.Col12).Begin())
+        {
+            @* ── Step 1 ── *@
+            @Html.TitleBuilder().SetTitle("1. Install the NuGet Package", TitleLevel.Two).AsSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:The viewer expects data produced by DocumentationBuilder. Install
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:DMBDocumentationViewer
+                }
+                @: in the website that hosts the documentation — not the generator project.
+            }
+            @(Html.CodeBlock("dotnet add package DMBDocumentationViewer", CodeLanguage.Bash)
+                .SetTitle("Install DMBDocumentationViewer")
+                .SetCopyButton())
+
+            @* ── Step 2 ── *@
+            @Html.TitleBuilder().SetTitle("2. Configure Services", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Load the viewer after PageBuilder and BootstrapBuilder. The viewer also registers MCP tools from its assembly for agent-assisted documentation workflows.
+            }
+            @(Html.CodeBlock(@"using DMBPageBuilder;
+using DMBBootstrapBuilder;
+using DMBDocumentationViewer;
+
+PageBuilderConfiguration.LoadCommonConfig(builder);
+BootstrapBuilderConfiguration.LoadCommonConfig(builder);
+DMBDocumentationViewerConfiguration.LoadCommonConfig(builder);", CodeLanguage.CSharp)
+                .SetTitle("Program.cs — services")
+                .SetCopyButton())
+
+            @* ── Step 3 ── *@
+            @Html.TitleBuilder().SetTitle("3. Map the MCP Endpoint", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Call
+                @using (Html.PB_Span().AsMonospace().Begin())
+                {
+                    @:UseApp
+                }
+                @: after building the application so the viewer can map its MCP endpoint and documentation routes.
+            }
+            @(Html.CodeBlock(@"WebApplication app = builder.Build();
+
+DMBDocumentationViewerConfiguration.UseApp(app);", CodeLanguage.CSharp)
+                .SetTitle("Program.cs — middleware")
+                .SetCopyButton())
+
+            @* ── Step 4 ── *@
+            @Html.TitleBuilder().SetTitle("4. Register Generated Navigation", TitleLevel.Two).AsSubSectionHeading().Render()
+            @using (Html.PB_P().Begin())
+            {
+                @:Register the generated sidebar provider after the documentation generation step has written it into the website. Then open the documentation home to verify the integration.
+            }
+            @(Html.CodeBlock(@"using DocumentationBuilders.Documentation;
+
+DocumentationSidebarProvider.Register();", CodeLanguage.CSharp)
+                .SetTitle("Sidebar registration")
+                .SetCopyButton())
+
+            @* ── Key Configuration callout ── *@
+            @using (Html.BlockBuilder().AsInfoCallout().Begin())
+            {
+                @using (Html.FlexBlockBuilder().Begin())
+                {
+                    @using (Html.BlockBuilder().AsCalloutIcon().Begin())
+                    {
+                        @using (Html.PB_Span().AddClass("bi bi-collection-fill fs-2 text-info").Begin()) { }
+                    }
+                    @using (Html.BlockBuilder().Begin())
+                    {
+                        @Html.TitleBuilder().SetTitle("Key Configuration", TitleLevel.Five).AsAlertHeading().Render()
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DMBDocumentationViewerConfiguration.LoadCommonConfig(...)
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DMBDocumentationViewerConfiguration.UseApp(...)
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:DocumentationSidebarProvider.Register()
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:Documentation/Index
+                            }
+                        }
+                        @using (Html.BlockBuilder().AsSidebarRow().Begin())
+                        {
+                            @using (Html.PB_Span().AsMonospaceSmall().Begin())
+                            {
+                                @:MCP endpoint
+                            }
+                        }
+                    }
+                }
+            }
+
+            @* ── Next Step ── *@
+            @using (Html.BlockBuilder().AsSidebarNote().Begin())
+            {
+                @using (Html.BlockBuilder().AsTextCenter().Begin())
+                {
+                    @Html.TitleBuilder().SetTitle("Curious how it works under the hood?", TitleLevel.Four).Render()
+                    @using (Html.PB_P().AsSmallMuted().Begin())
+                    {
+                        @:Understand how DocumentationViewer routes requests and renders pages at runtime.
+                    }
+                    @Html.Button(ActionItemFactory.AspRoute("DocumentationViewer", "Architecture").SetTitle("Architecture").SetIcon(IconStruct.Bootstrap("bi-diagram-3")).SetVariant(VariantStyle.Primary)).Render()
+                }
+            }
+        }
+    }
+}
