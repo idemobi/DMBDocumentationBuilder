@@ -20,7 +20,6 @@
         <ProjectReference Include="..\Source\Builder\DMBDocumentationBuilder.csproj" />
         <ProjectReference Include="..\Source\Viewer\DMBDocumentationViewer.csproj" />
         <ProjectReference Include="..\Source\Test\DMBDocumentationTest.csproj" />
-        <ProjectReference Include="..\Source\ImprovementByAI\DMBDocumentationImprovementByAI.csproj" />
         <PackageReference Include="DMBServerHelper" Version="0.13.0" />
         <PackageReference Include="DMBServerWebHelper" Version="0.13.0" />
         <PackageReference Include="DMBPageBuilder" Version="0.13.0" />
