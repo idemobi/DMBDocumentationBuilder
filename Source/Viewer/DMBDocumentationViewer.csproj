@@ -71,11 +71,11 @@
         </When>
         <Otherwise>
             <ItemGroup Label="Case Debug, Release, Deployment">
-                <PackageReference Include="DMBBootstrapBuilder" Version="0.13.0"/>
-                <PackageReference Include="DMBComponentBuilder" Version="0.13.0"/>
-                <PackageReference Include="DMBPageBuilder" Version="0.13.0"/>
-                <PackageReference Include="DMBServerWebHelper" Version="0.13.0"/>
-                <PackageReference Include="DMBServerHelper" Version="0.13.0"/>
+                <ProjectReference Include="..\..\..\DMBBootstrapBuilder\Source\DMBBootstrapBuilder.csproj"/>
+                <ProjectReference Include="..\..\..\DMBComponentBuilder\Source\DMBComponentBuilder.csproj"/>
+                <ProjectReference Include="..\..\..\DMBPageBuilder\Source\DMBPageBuilder.csproj"/>
+                <ProjectReference Include="..\..\..\DMBServerWebHelper\Source\DMBServerWebHelper.csproj"/>
+                <ProjectReference Include="..\..\..\DMBServerHelper\Source\DMBServerHelper.csproj"/>
             </ItemGroup>
         </Otherwise>
     </Choose>
