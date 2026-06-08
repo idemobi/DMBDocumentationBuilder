@@ -8,6 +8,7 @@
 #region
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -57,6 +58,7 @@ namespace DMBDocumentationImprovementByLMStudio
         #region Instance fields and properties
 
         private readonly HttpClient _httpClient;
+        private readonly bool _hasApiToken;
         private readonly string _modelName;
 
         #endregion
@@ -68,7 +70,7 @@ namespace DMBDocumentationImprovementByLMStudio
         /// <summary>
         ///     Initializes a new instance of the <see cref="LMStudioTextGenerator" /> class.
         /// </summary>
-        public LMStudioTextGenerator(LMStudioModel model, string baseUrl)
+        public LMStudioTextGenerator(LMStudioModel model, string baseUrl, string apiToken)
         {
             _modelName = model.ToModelString();
 
@@ -78,8 +80,13 @@ namespace DMBDocumentationImprovementByLMStudio
                 Timeout = Timeout.InfiniteTimeSpan
             };
 
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", "lm-studio");
+            _hasApiToken = !string.IsNullOrWhiteSpace(apiToken);
+
+            if (_hasApiToken)
+            {
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", apiToken);
+            }
         }
 
         #endregion
@@ -120,6 +127,16 @@ namespace DMBDocumentationImprovementByLMStudio
                 "chat/completions",
                 content,
                 linkedCancellation.Token);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                string tokenStatus = _hasApiToken
+                    ? "The configured API token was sent but LM Studio rejected it."
+                    : "No API token was configured, so the request was sent without an Authorization header.";
+
+                throw new InvalidOperationException(
+                    $"LM Studio returned 401 Unauthorized. {tokenStatus} Configure LMStudioOptions.ApiToken with the token set in LM Studio, or disable authorization in LM Studio.");
+            }
 
             response.EnsureSuccessStatusCode();
 

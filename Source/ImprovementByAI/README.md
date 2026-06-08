@@ -26,6 +26,7 @@ PackageId, Version, NamespaceName, ObjectName, ObjectType
 LMStudioRuntime.Run(new LMStudioOptions
 {
     DatabasePath = "Documentation/data.db",
+    ApiToken = Environment.GetEnvironmentVariable("AI_RESUME_LMSTUDIO_API_TOKEN") ?? string.Empty,
     ObjectSelectionMode = DocumentationAIObjectSelectionMode.LatestVersion,
     MaxObjectsToProcess = 60
 });

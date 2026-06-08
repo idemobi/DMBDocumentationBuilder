@@ -28,6 +28,7 @@ public sealed class OptionsTests
 
         Assert.Multiple(() =>
         {
+            Assert.That(options.ApiToken, Is.Empty);
             Assert.That(options.BaseUrl, Is.EqualTo("http://localhost:1234/v1/"));
             Assert.That(options.DatabasePath, Is.Empty);
             Assert.That(options.ForceRegenerate, Is.False);

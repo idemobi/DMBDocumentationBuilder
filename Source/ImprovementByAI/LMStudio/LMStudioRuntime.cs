@@ -85,8 +85,9 @@ namespace DMBDocumentationImprovementByLMStudio
             Console.WriteLine($"[LMSTUDIO] Main DB: {mainDatabasePath}");
             Console.WriteLine($"[LMSTUDIO] AI DB:   {aiDatabasePath}");
             Console.WriteLine($"[LMSTUDIO] Model:   {currentModelName}");
+            Console.WriteLine($"[LMSTUDIO] Token:   {(string.IsNullOrWhiteSpace(options.ApiToken) ? "not configured" : "configured")}");
 
-            var generator = new LMStudioTextGenerator(currentModel, options.BaseUrl);
+            var generator = new LMStudioTextGenerator(currentModel, options.BaseUrl, options.ApiToken);
             var databaseImprover = new DocumentationDatabaseImprover(mainDatabasePath, aiDatabasePath);
 
             List<DocumentationObjectRow> rows = await databaseImprover.LoadObjectsAsync(
@@ -175,7 +176,7 @@ namespace DMBDocumentationImprovementByLMStudio
                     Console.ResetColor();
 
                     currentModelName = currentModel.ToModelString();
-                    generator = new LMStudioTextGenerator(currentModel, options.BaseUrl);
+                    generator = new LMStudioTextGenerator(currentModel, options.BaseUrl, options.ApiToken);
 
                     RegisterRenderSource(
                         mainDatabasePath,

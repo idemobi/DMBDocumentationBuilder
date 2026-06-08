@@ -23,6 +23,11 @@ namespace DMBDocumentationImprovementByLMStudio
         public string BaseUrl { get; init; } = "http://localhost:1234/v1/";
 
         /// <summary>
+        ///     Gets the optional bearer token used by the LMStudio compatible API.
+        /// </summary>
+        public string ApiToken { get; init; } = string.Empty;
+
+        /// <summary>
         ///     Gets the SQLite documentation database path to improve.
         /// </summary>
         public string DatabasePath { get; init; } = string.Empty;
