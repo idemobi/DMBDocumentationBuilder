@@ -81,6 +81,41 @@ namespace DMBDocumentationBuilder
             transaction.Commit();
         }
 
+        private static string BuildVersionPredicate(
+            SqliteCommand command,
+            string columnName,
+            string parameterPrefix,
+            IReadOnlyList<string> versionPatterns
+        )
+        {
+            List<string> predicates = new();
+
+            for (int i = 0; i < versionPatterns.Count; i++)
+            {
+                string versionPattern = versionPatterns[i];
+
+                if (versionPattern.EndsWith(".*", StringComparison.Ordinal))
+                {
+                    string versionPrefix = versionPattern[..^2];
+                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
+                    string wildcardParameterName = $"@{parameterPrefix}Wildcard{i}";
+
+                    predicates.Add($"({columnName} = {exactParameterName} OR {columnName} LIKE {wildcardParameterName})");
+                    command.Parameters.AddWithValue(exactParameterName, versionPrefix);
+                    command.Parameters.AddWithValue(wildcardParameterName, $"{versionPrefix}.%");
+                }
+                else
+                {
+                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
+
+                    predicates.Add($"{columnName} = {exactParameterName}");
+                    command.Parameters.AddWithValue(exactParameterName, versionPattern);
+                }
+            }
+
+            return string.Join(" OR ", predicates);
+        }
+
         private static void EnsureColumnExists(
             SqliteConnection connection,
             string tableName,
@@ -383,6 +418,128 @@ namespace DMBDocumentationBuilder
 
                 TableCreatedDatabasePaths.Add(resolvedDatabasePath);
             }
+        }
+
+        /// <summary>
+        ///     Removes persisted documentation records for obsolete documentation versions.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The SQLite database path that contains generated documentation metadata.</param>
+        /// <param name="versionPatterns">
+        ///     The version values or terminal wildcard patterns to remove. Exact values match one stored version. Patterns
+        ///     ending with <c>.*</c> match the prefix version itself and all child versions, for example <c>1.2.*</c> matches
+        ///     <c>1.2</c> and <c>1.2.3</c>.
+        /// </param>
+        /// <returns>The total number of rows removed from documentation metadata tables.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="versionPatterns" /> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when a version pattern is empty or uses an unsupported wildcard.</exception>
+        /// <remarks>
+        ///     The purge is executed inside one SQLite transaction and affects generated objects, object sources, members,
+        ///     source file snapshots, project context files, OpenAPI records, and sidebar entries.
+        /// </remarks>
+        public static int PurgeVersions(
+            string sqliteDatabasePath,
+            params string[] versionPatterns
+        )
+        {
+            string[] normalizedVersionPatterns = NormalizePurgeVersionPatterns(versionPatterns);
+            if (normalizedVersionPatterns.Length == 0) return 0;
+
+            EnsureTableCreated(sqliteDatabasePath);
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            using SqliteTransaction transaction = connection.BeginTransaction();
+
+            int deletedRowCount = 0;
+
+            string[] versionedTables =
+            [
+                "DocumentationOpenApiOperations",
+                "DocumentationOpenApiDocuments",
+                "DocumentationMembers",
+                "DocumentationObjectSources",
+                "DocumentationSourceFiles",
+                "DocumentationProjectContextFiles",
+                "DocumentationObjects"
+            ];
+
+            foreach (string tableName in versionedTables)
+            {
+                using SqliteCommand deleteCommand = connection.CreateCommand();
+                deleteCommand.Transaction = transaction;
+                string versionPredicate = BuildVersionPredicate(deleteCommand, "Version", $"{tableName}Version", normalizedVersionPatterns);
+                deleteCommand.CommandText = $"DELETE FROM {tableName} WHERE {versionPredicate}";
+                deletedRowCount += deleteCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand deleteSidebarCommand = connection.CreateCommand())
+            {
+                deleteSidebarCommand.Transaction = transaction;
+                string sidebarVersionPredicate = BuildVersionPredicate(
+                    deleteSidebarCommand,
+                    "Version",
+                    "SidebarVersion",
+                    normalizedVersionPatterns);
+                string sidebarRouteVersionPredicate = BuildVersionPredicate(
+                    deleteSidebarCommand,
+                    "RouteVersion",
+                    "SidebarRouteVersion",
+                    normalizedVersionPatterns);
+
+                deleteSidebarCommand.CommandText = $"""
+                                                     DELETE FROM DocumentationSidebarItems
+                                                     WHERE {sidebarVersionPredicate}
+                                                        OR {sidebarRouteVersionPredicate}
+                                                     """;
+                deletedRowCount += deleteSidebarCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+
+            return deletedRowCount;
+        }
+
+        private static string[] NormalizePurgeVersionPatterns(params string[] versionPatterns)
+        {
+            if (versionPatterns is null) throw new ArgumentNullException(nameof(versionPatterns));
+
+            List<string> normalizedPatterns = new();
+
+            foreach (string? versionPattern in versionPatterns)
+            {
+                if (string.IsNullOrWhiteSpace(versionPattern))
+                {
+                    throw new ArgumentException("Version purge patterns cannot be empty.", nameof(versionPatterns));
+                }
+
+                string trimmedPattern = versionPattern.Trim();
+                int wildcardIndex = trimmedPattern.IndexOf('*', StringComparison.Ordinal);
+
+                if (wildcardIndex >= 0)
+                {
+                    if (!trimmedPattern.EndsWith(".*", StringComparison.Ordinal) || wildcardIndex != trimmedPattern.Length - 1)
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported version purge pattern '{trimmedPattern}'. Only terminal wildcards such as '1.2.*' are supported.",
+                            nameof(versionPatterns));
+                    }
+
+                    string prefix = trimmedPattern[..^2];
+
+                    if (string.IsNullOrWhiteSpace(prefix))
+                    {
+                        throw new ArgumentException("The '*' purge pattern is not supported.", nameof(versionPatterns));
+                    }
+                }
+
+                if (!normalizedPatterns.Contains(trimmedPattern, StringComparer.Ordinal))
+                {
+                    normalizedPatterns.Add(trimmedPattern);
+                }
+            }
+
+            return normalizedPatterns.ToArray();
         }
 
         /// <summary>

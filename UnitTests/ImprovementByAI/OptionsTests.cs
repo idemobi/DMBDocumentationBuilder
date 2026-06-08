@@ -8,6 +8,7 @@
 #region
 
 using System;
+using DMBDocumentationImprovementByAI;
 using DMBDocumentationImprovementByLMStudio;
 using DMBDocumentationImprovementByOllama;
 using DMBDocumentationImprovementByOpenAI;
@@ -33,6 +34,7 @@ public sealed class OptionsTests
             Assert.That(options.MaxModelJsonLength, Is.EqualTo(8000));
             Assert.That(options.MaxObjectsToProcess, Is.EqualTo(0));
             Assert.That(options.Model, Is.EqualTo(LMStudioModel.Gemma4));
+            Assert.That(options.ObjectSelectionMode, Is.EqualTo(DocumentationAIObjectSelectionMode.LatestVersion));
             Assert.That(options.RequestTimeout, Is.EqualTo(TimeSpan.FromMinutes(10)));
         });
     }
@@ -49,6 +51,7 @@ public sealed class OptionsTests
             Assert.That(options.MaxModelJsonLength, Is.EqualTo(8000));
             Assert.That(options.MaxObjectsToProcess, Is.EqualTo(0));
             Assert.That(options.Model, Is.EqualTo(OllamaModel.Qwen25Coder14B));
+            Assert.That(options.ObjectSelectionMode, Is.EqualTo(DocumentationAIObjectSelectionMode.LatestVersion));
             Assert.That(options.RequestTimeout, Is.EqualTo(TimeSpan.FromMinutes(10)));
             Assert.That(options.StartOllamaServerIfNeeded, Is.True);
             Assert.That(options.StopModelWhenFinished, Is.True);
@@ -68,6 +71,7 @@ public sealed class OptionsTests
             Assert.That(options.MaxModelJsonLength, Is.EqualTo(8000));
             Assert.That(options.MaxObjectsToProcess, Is.EqualTo(0));
             Assert.That(options.Model, Is.EqualTo(OpenAIModel.Gpt54Mini));
+            Assert.That(options.ObjectSelectionMode, Is.EqualTo(DocumentationAIObjectSelectionMode.LatestVersion));
             Assert.That(options.RequestTimeout, Is.EqualTo(TimeSpan.FromMinutes(5)));
         });
     }

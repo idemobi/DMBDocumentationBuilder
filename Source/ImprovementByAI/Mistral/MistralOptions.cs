@@ -6,6 +6,7 @@
 #endregion
 
 using System;
+using DMBDocumentationImprovementByAI;
 
 namespace DMBDocumentationImprovementByMistral
 {
@@ -45,6 +46,11 @@ namespace DMBDocumentationImprovementByMistral
         ///     Gets the maximum number of documentation objects to process; zero means no explicit limit.
         /// </summary>
         public int MaxObjectsToProcess { get; init; } = 0;
+
+        /// <summary>
+        ///     Gets the documentation object selection mode used before AI generation starts.
+        /// </summary>
+        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
 
         /// <summary>
         ///     Gets the Mistral model selected for generation.

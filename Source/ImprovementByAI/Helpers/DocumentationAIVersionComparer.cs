@@ -1,0 +1,87 @@
+﻿#region Copyright
+
+// ©2002-2026 idéMobi
+// www.idemobi.com
+
+#endregion
+
+#region
+
+using System;
+using System.Collections.Generic;
+
+#endregion
+
+namespace DMBDocumentationImprovementByAI
+{
+    internal sealed class DocumentationAIVersionComparer : IComparer<string>
+    {
+        #region Static methods
+
+        private static int[] ParseVersionParts(string? value)
+        {
+            int[] parts = new int[4];
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return parts;
+            }
+
+            string normalized = value.Trim();
+            int metadataIndex = normalized.IndexOf('+');
+
+            if (metadataIndex >= 0)
+            {
+                normalized = normalized[..metadataIndex];
+            }
+
+            int prereleaseIndex = normalized.IndexOf('-');
+
+            if (prereleaseIndex >= 0)
+            {
+                normalized = normalized[..prereleaseIndex];
+            }
+
+            string[] tokens = normalized.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+            for (int index = 0; index < tokens.Length && index < parts.Length; index++)
+            {
+                if (int.TryParse(tokens[index], out int parsedPart))
+                {
+                    parts[index] = parsedPart;
+                }
+            }
+
+            return parts;
+        }
+
+        #endregion
+
+        #region Instance methods
+
+        public int Compare(string? x, string? y)
+        {
+            if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+
+            int[] xParts = ParseVersionParts(x);
+            int[] yParts = ParseVersionParts(y);
+
+            for (int index = 0; index < xParts.Length; index++)
+            {
+                int partComparison = xParts[index].CompareTo(yParts[index]);
+
+                if (partComparison != 0)
+                {
+                    return partComparison;
+                }
+            }
+
+            return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
+    }
+}

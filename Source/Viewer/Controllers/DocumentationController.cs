@@ -1374,11 +1374,32 @@ namespace DMBDocumentationViewer.Controllers
             return result != null && result != DBNull.Value;
         }
 
+        private static bool ColumnExists(SqliteConnection connection, string tableName, string columnName)
+        {
+            using var command = new SqliteCommand($"PRAGMA table_info({tableName});", connection);
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                if (string.Equals(reader["name"]?.ToString(), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static DocumentationAIResultViewModel? GetAIResultFromDatabase(
             string databasePath,
             string provider,
             string model,
-            long documentationObjectId
+            long documentationObjectId,
+            string packageId,
+            string version,
+            string namespaceName,
+            string objectName,
+            string objectType
         )
         {
             if (!System.IO.File.Exists(databasePath))
@@ -1394,14 +1415,42 @@ namespace DMBDocumentationViewer.Controllers
                 return null;
             }
 
-            const string sql = """
-                               SELECT AISummary, AISummaryShort, AIKeywords, AIModel
-                               FROM DocumentationAIResult
-                               WHERE DocumentationObjectId = @Id
-                               """;
+            bool hasObjectIdentityColumns =
+                ColumnExists(connection, "DocumentationAIResult", "PackageId") &&
+                ColumnExists(connection, "DocumentationAIResult", "Version") &&
+                ColumnExists(connection, "DocumentationAIResult", "NamespaceName") &&
+                ColumnExists(connection, "DocumentationAIResult", "ObjectName") &&
+                ColumnExists(connection, "DocumentationAIResult", "ObjectType");
+
+            string sql = """
+                         SELECT AISummary, AISummaryShort, AIKeywords, AIModel
+                         FROM DocumentationAIResult
+                         WHERE DocumentationObjectId = @Id
+                         """;
+
+            if (hasObjectIdentityColumns)
+            {
+                sql += """
+
+                         AND PackageId = @PackageId
+                         AND Version = @Version
+                         AND NamespaceName = @NamespaceName
+                         AND ObjectName = @ObjectName
+                         AND ObjectType = @ObjectType
+                         """;
+            }
 
             using var command = new SqliteCommand(sql, connection);
             command.Parameters.AddWithValue("@Id", documentationObjectId);
+
+            if (hasObjectIdentityColumns)
+            {
+                command.Parameters.AddWithValue("@PackageId", packageId);
+                command.Parameters.AddWithValue("@Version", version);
+                command.Parameters.AddWithValue("@NamespaceName", namespaceName);
+                command.Parameters.AddWithValue("@ObjectName", objectName);
+                command.Parameters.AddWithValue("@ObjectType", objectType);
+            }
 
             using var reader = command.ExecuteReader();
 
@@ -1445,7 +1494,12 @@ namespace DMBDocumentationViewer.Controllers
                     absolutePath,
                     source.Provider,
                     source.Model,
-                    documentationObjectId);
+                    documentationObjectId,
+                    packageId,
+                    version,
+                    namespaceName,
+                    objectName,
+                    objectType);
 
                 if (aiResult != null)
                 {

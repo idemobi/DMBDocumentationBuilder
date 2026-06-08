@@ -14,6 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DMBDocumentationImprovementByAI;
 using Microsoft.Data.Sqlite;
 
 #endregion
@@ -111,7 +112,7 @@ namespace DMBDocumentationImprovementByClaude
             ///     Loads documentation database rows required for AI improvement.
             /// </summary>
             /// <returns>The loaded database rows.</returns>
-            public async Task<List<DocumentationObjectRow>> LoadObjectsAsync(int max, CancellationToken ct)
+            public async Task<List<DocumentationObjectRow>> LoadObjectsAsync(int max, DocumentationAIObjectSelectionMode selectionMode, CancellationToken ct)
             {
                 using var connection = new SqliteConnection($"Data Source={_mainDatabasePath}");
                 await connection.OpenAsync(ct);
@@ -121,11 +122,6 @@ namespace DMBDocumentationImprovementByClaude
                              FROM DocumentationObjects
                              ORDER BY Id
                              """;
-
-                if (max > 0)
-                {
-                    sql += $" LIMIT {max}";
-                }
 
                 using var cmd = new SqliteCommand(sql, connection);
                 using var reader = await cmd.ExecuteReaderAsync(ct);
@@ -149,7 +145,16 @@ namespace DMBDocumentationImprovementByClaude
                     });
                 }
 
-                return list;
+                return DocumentationAIObjectSelector.SelectRows(
+                    list,
+                    selectionMode,
+                    max,
+                    row => row.Id,
+                    row => row.PackageId,
+                    row => row.Version,
+                    row => row.NamespaceName,
+                    row => row.ObjectName,
+                    row => row.ObjectType);
             }
 
             /// <summary>
@@ -158,6 +163,11 @@ namespace DMBDocumentationImprovementByClaude
             /// <returns>A task that completes when the row has been stored.</returns>
             public async Task UpsertClaudeAsync(
                 long id,
+                string packageId,
+                string version,
+                string namespaceName,
+                string objectName,
+                string objectType,
                 string route,
                 string summary,
                 string shortSummary,
@@ -174,10 +184,15 @@ namespace DMBDocumentationImprovementByClaude
 
                 const string sql = @"
 INSERT INTO DocumentationAIResult
-(DocumentationObjectId, RoutePath, AISummary, AISummaryShort, AIKeywords, AIContentLastHash, AIUpdatedAt, AIModel)
+(DocumentationObjectId, PackageId, Version, NamespaceName, ObjectName, ObjectType, RoutePath, AISummary, AISummaryShort, AIKeywords, AIContentLastHash, AIUpdatedAt, AIModel)
 VALUES
-(@Id, @Route, @S, @SS, @K, @H, @D, @M)
+(@Id, @PackageId, @Version, @NamespaceName, @ObjectName, @ObjectType, @Route, @S, @SS, @K, @H, @D, @M)
 ON CONFLICT(DocumentationObjectId) DO UPDATE SET
+    PackageId = excluded.PackageId,
+    Version = excluded.Version,
+    NamespaceName = excluded.NamespaceName,
+    ObjectName = excluded.ObjectName,
+    ObjectType = excluded.ObjectType,
     RoutePath = excluded.RoutePath,
     AISummary = excluded.AISummary,
     AISummaryShort = excluded.AISummaryShort,
@@ -190,6 +205,11 @@ ON CONFLICT(DocumentationObjectId) DO UPDATE SET
                 using var cmd = new SqliteCommand(sql, connection);
 
                 cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@PackageId", packageId);
+                cmd.Parameters.AddWithValue("@Version", version);
+                cmd.Parameters.AddWithValue("@NamespaceName", namespaceName);
+                cmd.Parameters.AddWithValue("@ObjectName", objectName);
+                cmd.Parameters.AddWithValue("@ObjectType", objectType);
                 cmd.Parameters.AddWithValue("@Route", route);
                 cmd.Parameters.AddWithValue("@S", summary);
                 cmd.Parameters.AddWithValue("@SS", shortSummary);
@@ -364,6 +384,7 @@ CREATE TABLE IF NOT EXISTS DocumentationAIResult
 ";
             using var command = new SqliteCommand(sql, connection);
             command.ExecuteNonQuery();
+            DocumentationAIResultSchema.EnsureMetadataColumns(connection);
         }
 
         private static void EnsureRenderSourcesTable(SqliteConnection connection)
@@ -504,7 +525,7 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
             var generator = new ClaudeTextGenerator(currentModel, options.ApiKey);
             var databaseImprover = new DocumentationDatabaseImprover(mainDatabasePath, aiDatabasePath);
 
-            var rows = await databaseImprover.LoadObjectsAsync(options.MaxObjectsToProcess, cancellationToken);
+            var rows = await databaseImprover.LoadObjectsAsync(options.MaxObjectsToProcess, options.ObjectSelectionMode, cancellationToken);
             var existingHashes = await databaseImprover.LoadClaudeHashesAsync(cancellationToken);
 
             Console.WriteLine($"[CLAUDE] {rows.Count} object(s) loaded.");
@@ -563,6 +584,11 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
 
                     await databaseImprover.UpsertClaudeAsync(
                         row.Id,
+                        row.PackageId,
+                        row.Version,
+                        row.NamespaceName,
+                        row.ObjectName,
+                        row.ObjectType,
                         row.RoutePath,
                         summary,
                         shortSummary,

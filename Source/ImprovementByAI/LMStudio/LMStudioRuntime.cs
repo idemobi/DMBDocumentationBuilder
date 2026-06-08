@@ -14,6 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DMBDocumentationImprovementByAI;
 using Microsoft.Data.Sqlite;
 
 #endregion
@@ -90,6 +91,7 @@ namespace DMBDocumentationImprovementByLMStudio
 
             List<DocumentationObjectRow> rows = await databaseImprover.LoadObjectsAsync(
                 options.MaxObjectsToProcess,
+                options.ObjectSelectionMode,
                 cancellationToken);
 
             Dictionary<long, string> existingHashes = await databaseImprover.LoadLMStudioHashesAsync(cancellationToken);
@@ -150,6 +152,11 @@ namespace DMBDocumentationImprovementByLMStudio
 
                     await databaseImprover.UpsertLMStudioAsync(
                         row.Id,
+                        row.PackageId,
+                        row.Version,
+                        row.NamespaceName,
+                        row.ObjectName,
+                        row.ObjectType,
                         row.RoutePath,
                         summary,
                         shortSummary,
@@ -215,6 +222,7 @@ CREATE TABLE IF NOT EXISTS DocumentationAIResult
 ";
             using var command = new SqliteCommand(sql, connection);
             command.ExecuteNonQuery();
+            DocumentationAIResultSchema.EnsureMetadataColumns(connection);
         }
 
         private static void EnsureRenderSourcesTable(SqliteConnection connection)
@@ -386,6 +394,7 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
             /// <returns>The loaded database rows.</returns>
             public async Task<List<DocumentationObjectRow>> LoadObjectsAsync(
                 int maxObjectsToProcess,
+                DocumentationAIObjectSelectionMode selectionMode,
                 CancellationToken cancellationToken
             )
             {
@@ -406,7 +415,7 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
                                  Keywords
                              FROM DocumentationObjects
                              ORDER BY Id
-                             """ + (maxObjectsToProcess > 0 ? $" LIMIT {maxObjectsToProcess}" : string.Empty) + ";";
+                             """;
 
                 using var command = new SqliteCommand(sql, connection);
                 using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -430,7 +439,16 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
                     });
                 }
 
-                return result;
+                return DocumentationAIObjectSelector.SelectRows(
+                    result,
+                    selectionMode,
+                    maxObjectsToProcess,
+                    row => row.Id,
+                    row => row.PackageId,
+                    row => row.Version,
+                    row => row.NamespaceName,
+                    row => row.ObjectName,
+                    row => row.ObjectType);
             }
 
             /// <summary>
@@ -439,6 +457,11 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
             /// <returns>A task that completes when the row has been stored.</returns>
             public async Task UpsertLMStudioAsync(
                 long id,
+                string packageId,
+                string version,
+                string namespaceName,
+                string objectName,
+                string objectType,
                 string routePath,
                 string aiSummary,
                 string aiSummaryShort,
@@ -457,6 +480,11 @@ ON CONFLICT(Provider, Model) DO UPDATE SET
 INSERT INTO DocumentationAIResult
 (
     DocumentationObjectId,
+    PackageId,
+    Version,
+    NamespaceName,
+    ObjectName,
+    ObjectType,
     RoutePath,
     AISummary,
     AISummaryShort,
@@ -469,6 +497,11 @@ INSERT INTO DocumentationAIResult
 VALUES
 (
     @Id,
+    @PackageId,
+    @Version,
+    @NamespaceName,
+    @ObjectName,
+    @ObjectType,
     @RoutePath,
     @AISummary,
     @AISummaryShort,
@@ -479,6 +512,11 @@ VALUES
     NULL
 )
 ON CONFLICT(DocumentationObjectId) DO UPDATE SET
+    PackageId = excluded.PackageId,
+    Version = excluded.Version,
+    NamespaceName = excluded.NamespaceName,
+    ObjectName = excluded.ObjectName,
+    ObjectType = excluded.ObjectType,
     RoutePath = excluded.RoutePath,
     AISummary = excluded.AISummary,
     AISummaryShort = excluded.AISummaryShort,
@@ -492,6 +530,11 @@ ON CONFLICT(DocumentationObjectId) DO UPDATE SET
                 using var command = new SqliteCommand(sql, connection);
 
                 command.Parameters.AddWithValue("@Id", id);
+                command.Parameters.AddWithValue("@PackageId", packageId);
+                command.Parameters.AddWithValue("@Version", version);
+                command.Parameters.AddWithValue("@NamespaceName", namespaceName);
+                command.Parameters.AddWithValue("@ObjectName", objectName);
+                command.Parameters.AddWithValue("@ObjectType", objectType);
                 command.Parameters.AddWithValue("@RoutePath", routePath);
                 command.Parameters.AddWithValue("@AISummary", aiSummary);
                 command.Parameters.AddWithValue("@AISummaryShort", aiSummaryShort);
