@@ -23,8 +23,8 @@
         <PublicSign>true</PublicSign>
         <Configurations>Debug;Release;NuGet</Configurations>
         <Platforms>AnyCPU</Platforms>
-        <Version>0.14.0</Version>
-        <FileVersion>0.14.0.0</FileVersion>
+        <Version>0.15.0</Version>
+        <FileVersion>0.15.0.0</FileVersion>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <Company>idéMobi</Company>
         <Authors>Jean-François CONTART, Quentin BOULOGNE, Camille GOLLIOT</Authors>
