@@ -207,6 +207,7 @@ namespace DMBDocumentationBuilder
 
             CSharpCompilation globalCompilation = BuildGlobalCompilation(projectList);
             Dictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex = DocumentationTypeRegistry.BuildDocumentedTypeIndex(globalCompilation, groups);
+            IReadOnlyList<DocumentationDependencyEdgeItem> dependencyEdges = DocumentationDependencyGraphExtractor.BuildAllDependencyEdges(globalCompilation, documentedTypeIndex);
 
             List<DocumentationRecordPageModel> pages = [];
 
@@ -279,11 +280,9 @@ namespace DMBDocumentationBuilder
                                 ObsoleteMessage = recordObsoleteMessage
                             };
 
-                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildRelatedDependencyEdges(
                                 recordSymbol,
-                                project,
-                                group,
-                                documentedTypeIndex));
+                                dependencyEdges));
 
                             foreach (INamedTypeSymbol implementedInterface in recordSymbol.Interfaces
                                          .OrderBy(x => x.ToDisplayString(), StringComparer.Ordinal))

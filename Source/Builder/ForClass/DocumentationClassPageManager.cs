@@ -367,6 +367,7 @@ namespace DMBDocumentationBuilder
 
             CSharpCompilation globalCompilation = BuildGlobalCompilation(projectList);
             Dictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex = DocumentationTypeRegistry.BuildDocumentedTypeIndex(globalCompilation, groups);
+            IReadOnlyList<DocumentationDependencyEdgeItem> dependencyEdges = DocumentationDependencyGraphExtractor.BuildAllDependencyEdges(globalCompilation, documentedTypeIndex);
             List<DocumentationClassPageModel> pages = [];
 
             foreach (DocumentationGroupDescriptor group in groups)
@@ -445,11 +446,9 @@ namespace DMBDocumentationBuilder
                             };
 
                             model.SeeAlsos.AddRange((IEnumerable<DocumentationXmlLinkItem>)classXmlDoc.SeeAlsos);
-                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildRelatedDependencyEdges(
                                 classSymbol,
-                                project,
-                                group,
-                                documentedTypeIndex));
+                                dependencyEdges));
 
                             foreach (INamedTypeSymbol implementedInterface in classSymbol.Interfaces
                                          .OrderBy(x => x.ToDisplayString(), StringComparer.Ordinal))

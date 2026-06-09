@@ -70,6 +70,9 @@ namespace DMBDocumentationBuilder
             foreach (DocumentationDependencyEdgeItem dependencyEdge in model.DependencyEdges)
             {
                 Add(keywords, dependencyEdge.RelationshipKind);
+                Add(keywords, dependencyEdge.SourceName);
+                Add(keywords, dependencyEdge.SourceKindLabel);
+                Add(keywords, dependencyEdge.SourceNamespaceName);
                 Add(keywords, dependencyEdge.TargetName);
                 Add(keywords, dependencyEdge.TargetKindLabel);
                 Add(keywords, dependencyEdge.TargetNamespaceName);

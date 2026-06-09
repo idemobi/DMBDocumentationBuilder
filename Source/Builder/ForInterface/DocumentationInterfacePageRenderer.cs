@@ -285,7 +285,14 @@ namespace DMBDocumentationBuilder
                 "_After_Declaration.html"));
             sb.AppendLine("                </section>");
 
-            sb.Append(DocumentationDependencyGraphRenderer.RenderHtml(item.DependencyEdges));
+            sb.Append(DocumentationDependencyGraphRenderer.RenderHtml(
+                item.DependencyEdges,
+                item.PackageId,
+                item.Version,
+                item.GroupName,
+                item.NamespaceName,
+                item.InterfaceName,
+                "Interface"));
             sb.AppendLine(ReadPartialContent(
                 sharedDocumentationRootDirectory,
                 item.NamespaceName,

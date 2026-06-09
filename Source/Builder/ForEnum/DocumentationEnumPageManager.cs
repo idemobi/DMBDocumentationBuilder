@@ -279,6 +279,7 @@ namespace DMBDocumentationBuilder
 
             CSharpCompilation globalCompilation = BuildGlobalCompilation(projectList);
             Dictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex = DocumentationTypeRegistry.BuildDocumentedTypeIndex(globalCompilation, groups);
+            IReadOnlyList<DocumentationDependencyEdgeItem> dependencyEdges = DocumentationDependencyGraphExtractor.BuildAllDependencyEdges(globalCompilation, documentedTypeIndex);
 
             List<DocumentationEnumPageModel> pages = [];
 
@@ -357,11 +358,9 @@ namespace DMBDocumentationBuilder
                                 Declaration = BuildEnumDeclaration(enumSymbol)
                             };
 
-                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildRelatedDependencyEdges(
                                 enumSymbol,
-                                project,
-                                group,
-                                documentedTypeIndex));
+                                dependencyEdges));
 
                             foreach (IFieldSymbol field in enumSymbol.GetMembers().OfType<IFieldSymbol>())
                             {
