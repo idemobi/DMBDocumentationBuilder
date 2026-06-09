@@ -30,8 +30,8 @@
         <VersionBase>$([System.DateTime]::UtcNow.ToString("yyyy.Mdd.HHmm"))</VersionBase>
         
         <BuildDate>$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</BuildDate>
-        <Version>0.18.0-preview.1</Version>
-        <FileVersion>0.18.0.0</FileVersion>
+        <Version>0.19.0</Version>
+        <FileVersion>0.19.0.0</FileVersion>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
         <Company>idéMobi</Company>
         <Authors>Jean-François CONTART, Quentin BOULOGNE, Camille GOLLIOT</Authors>
@@ -62,11 +62,11 @@
     <Choose>
         <When Condition=" '$(Configuration)' == 'NuGet' ">
             <ItemGroup Label="Case NuGet">
-                <PackageReference Include="DMBBootstrapBuilder" Version="0.18.0-preview.1"/>
-                <PackageReference Include="DMBComponentBuilder" Version="0.18.0-preview.1"/>
-                <PackageReference Include="DMBPageBuilder" Version="0.18.0-preview.1"/>
-                <PackageReference Include="DMBServerWebHelper" Version="0.18.0-preview.1"/>
-                <PackageReference Include="DMBServerHelper" Version="0.18.0-preview.1"/>
+                <PackageReference Include="DMBBootstrapBuilder" Version="0.19.0"/>
+                <PackageReference Include="DMBComponentBuilder" Version="0.19.0"/>
+                <PackageReference Include="DMBPageBuilder" Version="0.19.0"/>
+                <PackageReference Include="DMBServerWebHelper" Version="0.19.0"/>
+                <PackageReference Include="DMBServerHelper" Version="0.19.0"/>
             </ItemGroup>
         </When>
         <Otherwise>
