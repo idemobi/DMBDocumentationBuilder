@@ -76,6 +76,14 @@ namespace DMBDocumentationBuilder
                 Add(keywords, implementedInterface);
             }
 
+            foreach (DocumentationDependencyEdgeItem dependencyEdge in model.DependencyEdges)
+            {
+                Add(keywords, dependencyEdge.RelationshipKind);
+                Add(keywords, dependencyEdge.TargetName);
+                Add(keywords, dependencyEdge.TargetKindLabel);
+                Add(keywords, dependencyEdge.TargetNamespaceName);
+            }
+
             foreach (DocumentationRecordFieldItem field in model.Fields)
             {
                 Add(keywords, field.FieldName);

@@ -66,6 +66,14 @@ namespace DMBDocumentationBuilder
             Add(keywords, model.Accessibility);
             Add(keywords, model.AssemblyName);
 
+            foreach (DocumentationDependencyEdgeItem dependencyEdge in model.DependencyEdges)
+            {
+                Add(keywords, dependencyEdge.RelationshipKind);
+                Add(keywords, dependencyEdge.TargetName);
+                Add(keywords, dependencyEdge.TargetKindLabel);
+                Add(keywords, dependencyEdge.TargetNamespaceName);
+            }
+
             foreach (var method in model.Methods)
             {
                 Add(keywords, method.MethodName);

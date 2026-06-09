@@ -30,6 +30,11 @@ namespace DMBDocumentationBuilder
         public string Declaration { get; init; } = string.Empty;
 
         /// <summary>
+        ///     Gets the dependency edges discovered from this documented interface to other documented elements.
+        /// </summary>
+        public List<DocumentationDependencyEdgeItem> DependencyEdges { get; } = [];
+
+        /// <summary>
         ///     Gets or sets the Events value used by generated documentation.
         /// </summary>
         public List<DocumentationInterfaceEventItem> Events { get; } = [];

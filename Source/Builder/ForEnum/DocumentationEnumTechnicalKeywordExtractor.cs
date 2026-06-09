@@ -67,6 +67,14 @@ namespace DMBDocumentationBuilder
 
             if (model.IsFlags) keywords.Add("flags");
 
+            foreach (DocumentationDependencyEdgeItem dependencyEdge in model.DependencyEdges)
+            {
+                Add(keywords, dependencyEdge.RelationshipKind);
+                Add(keywords, dependencyEdge.TargetName);
+                Add(keywords, dependencyEdge.TargetKindLabel);
+                Add(keywords, dependencyEdge.TargetNamespaceName);
+            }
+
             foreach (var value in model.Values)
             {
                 Add(keywords, value.Name);

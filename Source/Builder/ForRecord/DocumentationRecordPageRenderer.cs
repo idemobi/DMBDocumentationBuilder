@@ -351,6 +351,13 @@ namespace DMBDocumentationBuilder
                 "_After_Declaration.cshtml"));
             sb.AppendLine("                </section>");
 
+            sb.Append(DocumentationDependencyGraphRenderer.RenderHtml(item.DependencyEdges));
+            sb.AppendLine(ReadPartialContent(
+                sharedDocumentationRootDirectory,
+                item.NamespaceName,
+                item.RecordName,
+                "_After_Dependency_Graph.html"));
+
             if (item.ExtensionMethods.Count > 0)
             {
                 sb.Append("                <section id=\"extension-methods\" class=\"card border-0 shadow-sm mt-3\" ")

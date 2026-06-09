@@ -198,6 +198,7 @@ namespace DMBDocumentationBuilder
             if (projectList.Count == 0) throw new InvalidOperationException("At least one project must be provided.");
 
             CSharpCompilation globalCompilation = BuildGlobalCompilation(projectList);
+            Dictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex = DocumentationTypeRegistry.BuildDocumentedTypeIndex(globalCompilation, groups);
 
             List<DocumentationStructPageModel> pages = [];
 
@@ -269,6 +270,12 @@ namespace DMBDocumentationBuilder
                                 IsObsolete = DocumentationAttributeHelper.IsObsolete(structSymbol, out _),
                                 ObsoleteMessage = structObsoleteMessage
                             };
+
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                                structSymbol,
+                                project,
+                                group,
+                                documentedTypeIndex));
 
                             foreach (INamedTypeSymbol implementedInterface in structSymbol.Interfaces
                                          .OrderBy(x => x.ToDisplayString(), StringComparer.Ordinal))

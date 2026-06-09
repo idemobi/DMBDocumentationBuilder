@@ -45,6 +45,11 @@ namespace DMBDocumentationBuilder
         public string Declaration { get; init; } = string.Empty;
 
         /// <summary>
+        ///     Gets the dependency edges discovered from this documented class to other documented elements.
+        /// </summary>
+        public List<DocumentationDependencyEdgeItem> DependencyEdges { get; } = [];
+
+        /// <summary>
         ///     Gets or sets the ExampleHtml value used by generated documentation.
         /// </summary>
         public string ExampleHtml { get; init; } = string.Empty;

@@ -21,6 +21,7 @@ namespace DMBDocumentationBuilder
 
             "_After_Metadata.html",
             "_After_Declaration.html",
+            "_After_Dependency_Graph.html",
             "_After_ExtensionMethods.html",
             "_After_Fields.html",
             "_After_Properties.html",

@@ -278,6 +278,7 @@ namespace DMBDocumentationBuilder
             if (projectList.Count == 0) throw new InvalidOperationException("At least one project must be provided.");
 
             CSharpCompilation globalCompilation = BuildGlobalCompilation(projectList);
+            Dictionary<string, DocumentationTypeRegistryItem> documentedTypeIndex = DocumentationTypeRegistry.BuildDocumentedTypeIndex(globalCompilation, groups);
 
             List<DocumentationEnumPageModel> pages = [];
 
@@ -355,6 +356,12 @@ namespace DMBDocumentationBuilder
                                 UnderlyingType = BuildUnderlyingType(enumSymbol),
                                 Declaration = BuildEnumDeclaration(enumSymbol)
                             };
+
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                                enumSymbol,
+                                project,
+                                group,
+                                documentedTypeIndex));
 
                             foreach (IFieldSymbol field in enumSymbol.GetMembers().OfType<IFieldSymbol>())
                             {

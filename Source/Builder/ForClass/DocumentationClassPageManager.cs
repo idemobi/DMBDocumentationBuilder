@@ -445,6 +445,11 @@ namespace DMBDocumentationBuilder
                             };
 
                             model.SeeAlsos.AddRange((IEnumerable<DocumentationXmlLinkItem>)classXmlDoc.SeeAlsos);
+                            model.DependencyEdges.AddRange(DocumentationDependencyGraphExtractor.BuildDependencyEdges(
+                                classSymbol,
+                                project,
+                                group,
+                                documentedTypeIndex));
 
                             foreach (INamedTypeSymbol implementedInterface in classSymbol.Interfaces
                                          .OrderBy(x => x.ToDisplayString(), StringComparer.Ordinal))
