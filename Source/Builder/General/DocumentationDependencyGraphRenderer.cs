@@ -410,6 +410,7 @@ namespace DMBDocumentationBuilder
             string routePath = BuildObjectRoutePath(packageId, version, groupName, namespaceName, objectName);
             string stroke = isCurrent ? "var(--bs-primary)" : "var(--bs-border-color)";
             string strokeWidth = isCurrent ? "2" : "1";
+            string icon = GetKindIcon(kindLabel);
 
             sb.Append("                                <a href=\"")
                 .Append(Attribute(routePath))
@@ -427,21 +428,43 @@ namespace DMBDocumentationBuilder
                 .Append("\" stroke-width=\"")
                 .Append(strokeWidth)
                 .AppendLine("\"></rect>");
-            sb.Append("                                    <text x=\"")
+            sb.Append("                                    <foreignObject x=\"")
                 .Append(x + 12)
+                .Append("\" y=\"")
+                .Append(y + 8)
+                .AppendLine("\" width=\"16\" height=\"16\" aria-hidden=\"true\">");
+            sb.Append("                                        <span xmlns=\"http://www.w3.org/1999/xhtml\" class=\"bi ")
+                .Append(Attribute(icon))
+                .AppendLine("\" style=\"display:block;width:16px;height:16px;color:var(--bs-secondary-color);font-size:13px;line-height:16px;\"></span>");
+            sb.AppendLine("                                    </foreignObject>");
+            sb.Append("                                    <text x=\"")
+                .Append(x + 34)
                 .Append("\" y=\"")
                 .Append(y + 18)
                 .Append("\" fill=\"currentColor\" font-size=\"13\" font-weight=\"700\">")
-                .Append(Html(Shorten(objectName, 30)))
+                .Append(Html(Shorten(objectName, 26)))
                 .AppendLine("</text>");
             sb.Append("                                    <text x=\"")
-                .Append(x + 12)
+                .Append(x + 34)
                 .Append("\" y=\"")
                 .Append(y + 34)
                 .Append("\" fill=\"currentColor\" opacity=\"0.68\" font-size=\"11\">")
-                .Append(Html(Shorten(kindLabel + " - " + namespaceName, 38)))
+                .Append(Html(Shorten(kindLabel + " - " + namespaceName, 34)))
                 .AppendLine("</text>");
             sb.AppendLine("                                </a>");
+        }
+
+        private static string GetKindIcon(string kindLabel)
+        {
+            return kindLabel switch
+            {
+                "Class" => "bi-building",
+                "Interface" => "bi-diagram-3",
+                "Record" => "bi-card-text",
+                "Struct" => "bi-box",
+                "Enum" => "bi-list-ul",
+                _ => "bi-code-square"
+            };
         }
 
         private static void RenderPath(

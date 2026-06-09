@@ -106,17 +106,17 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     /// <returns>The configured <see cref="GroupActionItem" /> containing Documentation labs page links.</returns>
     public static GroupActionItem CreateMenuGroup()
     {
-        return ActionItemFactory.Group("Documentation", IconStruct.Bootstrap("bi-book"))
+        return ActionItemFactory.Group("DMB Documentation", IconStruct.Bootstrap("bi-book"))
             .AddItems(
                 CreateLabsAction("DocumentationHome", "Index", "Overview", "bi-compass"),
-                ActionItemFactory.Group("DocumentationBuilder", IconStruct.Bootstrap("bi-file-earmark-richtext"))
+                ActionItemFactory.Group("DMBDocumentationBuilder", IconStruct.Bootstrap("bi-file-earmark-richtext"))
                     .AddItems(
                         CreateLabsAction("DocumentationBuilder", "Introduction", "Introduction", "bi-info-circle"),
                         CreateLabsAction("DocumentationBuilder", "GettingStarted", "Getting Started", "bi-play-circle"),
                         CreateLabsAction("DocumentationBuilder", "Architecture", "Architecture", "bi-diagram-3"),
                         CreateLabsAction("DocumentationBuilder", "RenderingPipeline", "Rendering Pipeline", "bi-bezier2")
                     ),
-                ActionItemFactory.Group("DocumentationViewer", IconStruct.Bootstrap("bi-eye"))
+                ActionItemFactory.Group("DMBDocumentationViewer", IconStruct.Bootstrap("bi-eye"))
                     .AddItems(
                         CreateLabsAction("DocumentationViewer", "Introduction", "Introduction", "bi-info-circle"),
                         CreateLabsAction("DocumentationViewer", "GettingStarted", "Getting Started", "bi-play-circle"),
@@ -167,17 +167,17 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     /// <returns>The configured <see cref="SideBarSectionComponent" />.</returns>
     public static SideBarSectionComponent CreateSidebarSection(string? currentController, string? currentAction)
     {
-        return new SideBarSectionComponent("Documentation")
+        return new SideBarSectionComponent("DMB Documentation")
             .Add(
                 CreateLabsAction("DocumentationHome", "Index", "Overview", "bi-compass", currentController, currentAction),
-                ActionItemFactory.Group("DocumentationBuilder", IconStruct.Bootstrap("bi-file-earmark-richtext"))
+                ActionItemFactory.Group("DMBDocumentationBuilder", IconStruct.Bootstrap("bi-file-earmark-richtext"))
                     .AddItems(
                         CreateLabsAction("DocumentationBuilder", "Introduction", "Introduction", "bi-info-circle", currentController, currentAction),
                         CreateLabsAction("DocumentationBuilder", "GettingStarted", "Getting Started", "bi-play-circle", currentController, currentAction),
                         CreateLabsAction("DocumentationBuilder", "Architecture", "Architecture", "bi-diagram-3", currentController, currentAction),
                         CreateLabsAction("DocumentationBuilder", "RenderingPipeline", "Rendering Pipeline", "bi-bezier2", currentController, currentAction)
                     ),
-                ActionItemFactory.Group("DocumentationViewer", IconStruct.Bootstrap("bi-eye"))
+                ActionItemFactory.Group("DMBDocumentationViewer", IconStruct.Bootstrap("bi-eye"))
                     .AddItems(
                         CreateLabsAction("DocumentationViewer", "Introduction", "Introduction", "bi-info-circle", currentController, currentAction),
                         CreateLabsAction("DocumentationViewer", "GettingStarted", "Getting Started", "bi-play-circle", currentController, currentAction),
@@ -272,8 +272,8 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     {
         return controllerName switch
         {
-            "DocumentationBuilder" => "DocumentationBuilder",
-            "DocumentationViewer" => "DocumentationViewer",
+            "DocumentationBuilder" => "DMBDocumentationBuilder",
+            "DocumentationViewer" => "DMBDocumentationViewer",
             _ => "Documentation"
         };
     }
