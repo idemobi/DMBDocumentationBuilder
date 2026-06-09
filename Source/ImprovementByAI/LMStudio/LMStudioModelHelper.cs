@@ -5,8 +5,6 @@
 
 #endregion
 
-using System;
-
 namespace DMBDocumentationImprovementByLMStudio
 {
     /// <summary>

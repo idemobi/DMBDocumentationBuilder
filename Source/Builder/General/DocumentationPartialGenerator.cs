@@ -5,8 +5,6 @@
 
 #endregion
 
-using System.IO;
-
 namespace DMBDocumentationBuilder
 {
     internal static class DocumentationPartialGenerator

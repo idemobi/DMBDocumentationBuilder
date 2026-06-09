@@ -5,8 +5,11 @@
 
 #endregion
 
-using System;
+#region
+
 using DMBDocumentationImprovementByAI;
+
+#endregion
 
 namespace DMBDocumentationImprovementByOllama
 {
@@ -43,14 +46,14 @@ namespace DMBDocumentationImprovementByOllama
         public int MaxObjectsToProcess { get; init; } = 0;
 
         /// <summary>
-        ///     Gets the documentation object selection mode used before AI generation starts.
-        /// </summary>
-        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
-
-        /// <summary>
         ///     Gets the Ollama model selected for generation.
         /// </summary>
         public OllamaModel Model { get; init; } = OllamaModel.Qwen25Coder14B;
+
+        /// <summary>
+        ///     Gets the documentation object selection mode used before AI generation starts.
+        /// </summary>
+        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
 
         /// <summary>
         ///     Gets the project context prompt fragment included in AI requests.

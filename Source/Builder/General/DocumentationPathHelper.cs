@@ -5,9 +5,6 @@
 
 #endregion
 
-using System.IO;
-using System.Linq;
-
 namespace DMBDocumentationBuilder
 {
     /// <summary>

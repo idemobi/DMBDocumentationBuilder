@@ -5,8 +5,11 @@
 
 #endregion
 
-using System;
+#region
+
 using DMBDocumentationImprovementByAI;
+
+#endregion
 
 namespace DMBDocumentationImprovementByClaude
 {
@@ -48,14 +51,14 @@ namespace DMBDocumentationImprovementByClaude
         public int MaxObjectsToProcess { get; init; } = 0;
 
         /// <summary>
-        ///     Gets the documentation object selection mode used before AI generation starts.
-        /// </summary>
-        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
-
-        /// <summary>
         ///     Gets the Claude model selected for generation.
         /// </summary>
         public ClaudeModel Model { get; init; } = ClaudeModelHelper.GetRecommendedDefault();
+
+        /// <summary>
+        ///     Gets the documentation object selection mode used before AI generation starts.
+        /// </summary>
+        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
 
         /// <summary>
         ///     Gets the project context prompt fragment included in AI requests.

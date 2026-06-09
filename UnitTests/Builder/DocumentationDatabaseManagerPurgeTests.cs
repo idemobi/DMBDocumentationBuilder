@@ -7,8 +7,6 @@
 
 #region
 
-using System;
-using System.IO;
 using DMBDocumentationBuilder;
 using NUnit.Framework;
 
@@ -19,6 +17,45 @@ namespace DMBDocumentationBuilderUnitTest;
 [TestFixture]
 public sealed class DocumentationDatabaseManagerPurgeTests
 {
+    private static string CreateDatabasePath()
+    {
+        string directoryPath = Path.Combine(Path.GetTempPath(), "DMBDocumentationBuilderUnitTests");
+        Directory.CreateDirectory(directoryPath);
+
+        return Path.Combine(directoryPath, $"{Guid.NewGuid():N}.db");
+    }
+
+    private static void DeleteDatabase(string databasePath)
+    {
+        foreach (string filePath in new[] { databasePath, $"{databasePath}-shm", $"{databasePath}-wal" })
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
+    }
+
+    private static void SaveObject(
+        string databasePath,
+        string version,
+        string objectName
+    )
+    {
+        DocumentationDatabaseManager.SaveObject(
+            databasePath,
+            "TestPackage",
+            version,
+            "TestNamespace",
+            objectName,
+            "Class",
+            new { objectName, version },
+            $"<p>{objectName}</p>",
+            objectName,
+            objectName,
+            $"/documentation/test/{version}/{objectName}");
+    }
+
     [Test]
     public void PurgeVersionsRejectsGlobalAndMiddleWildcards()
     {
@@ -81,44 +118,5 @@ public sealed class DocumentationDatabaseManagerPurgeTests
         {
             DeleteDatabase(databasePath);
         }
-    }
-
-    private static string CreateDatabasePath()
-    {
-        string directoryPath = Path.Combine(Path.GetTempPath(), "DMBDocumentationBuilderUnitTests");
-        Directory.CreateDirectory(directoryPath);
-
-        return Path.Combine(directoryPath, $"{Guid.NewGuid():N}.db");
-    }
-
-    private static void DeleteDatabase(string databasePath)
-    {
-        foreach (string filePath in new[] { databasePath, $"{databasePath}-shm", $"{databasePath}-wal" })
-        {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-        }
-    }
-
-    private static void SaveObject(
-        string databasePath,
-        string version,
-        string objectName
-    )
-    {
-        DocumentationDatabaseManager.SaveObject(
-            databasePath,
-            "TestPackage",
-            version,
-            "TestNamespace",
-            objectName,
-            "Class",
-            new { objectName, version },
-            $"<p>{objectName}</p>",
-            objectName,
-            objectName,
-            $"/documentation/test/{version}/{objectName}");
     }
 }

@@ -7,7 +7,6 @@
 
 #region
 
-using System;
 using DMBDocumentationTest.Coverage;
 using DMBDocumentationTest.Secondary;
 using NUnit.Framework;

@@ -7,8 +7,6 @@
 
 #region
 
-using System;
-using System.IO;
 using DMBDocumentationImprovementByAI;
 using NUnit.Framework;
 

@@ -25,16 +25,16 @@ namespace DMBDocumentationImprovementByAI
         )
         {
             using (var probeCommand = new SqliteCommand($"PRAGMA table_info({tableName});", connection))
-            using (SqliteDataReader reader = probeCommand.ExecuteReader())
-            {
-                while (reader.Read())
+                using (SqliteDataReader reader = probeCommand.ExecuteReader())
                 {
-                    if (string.Equals(reader["name"]?.ToString(), columnName, System.StringComparison.OrdinalIgnoreCase))
+                    while (reader.Read())
                     {
-                        return;
+                        if (string.Equals(reader["name"]?.ToString(), columnName, System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            return;
+                        }
                     }
                 }
-            }
 
             using var alterCommand = new SqliteCommand(
                 $"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition};",

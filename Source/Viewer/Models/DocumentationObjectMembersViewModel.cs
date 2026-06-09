@@ -5,8 +5,6 @@
 
 #endregion
 
-using System.Collections.Generic;
-
 namespace DMBDocumentationViewer
 {
     /// <summary>

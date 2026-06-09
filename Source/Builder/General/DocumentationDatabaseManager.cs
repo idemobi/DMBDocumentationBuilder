@@ -7,10 +7,6 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
@@ -32,6 +28,41 @@ namespace DMBDocumentationBuilder
         #endregion
 
         #region Static methods
+
+        private static string BuildVersionPredicate(
+            SqliteCommand command,
+            string columnName,
+            string parameterPrefix,
+            IReadOnlyList<string> versionPatterns
+        )
+        {
+            List<string> predicates = new();
+
+            for (int i = 0; i < versionPatterns.Count; i++)
+            {
+                string versionPattern = versionPatterns[i];
+
+                if (versionPattern.EndsWith(".*", StringComparison.Ordinal))
+                {
+                    string versionPrefix = versionPattern[..^2];
+                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
+                    string wildcardParameterName = $"@{parameterPrefix}Wildcard{i}";
+
+                    predicates.Add($"({columnName} = {exactParameterName} OR {columnName} LIKE {wildcardParameterName})");
+                    command.Parameters.AddWithValue(exactParameterName, versionPrefix);
+                    command.Parameters.AddWithValue(wildcardParameterName, $"{versionPrefix}.%");
+                }
+                else
+                {
+                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
+
+                    predicates.Add($"{columnName} = {exactParameterName}");
+                    command.Parameters.AddWithValue(exactParameterName, versionPattern);
+                }
+            }
+
+            return string.Join(" OR ", predicates);
+        }
 
         /// <summary>
         ///     Deletes imported OpenAPI documents and operation indexes for one package version.
@@ -79,41 +110,6 @@ namespace DMBDocumentationBuilder
             }
 
             transaction.Commit();
-        }
-
-        private static string BuildVersionPredicate(
-            SqliteCommand command,
-            string columnName,
-            string parameterPrefix,
-            IReadOnlyList<string> versionPatterns
-        )
-        {
-            List<string> predicates = new();
-
-            for (int i = 0; i < versionPatterns.Count; i++)
-            {
-                string versionPattern = versionPatterns[i];
-
-                if (versionPattern.EndsWith(".*", StringComparison.Ordinal))
-                {
-                    string versionPrefix = versionPattern[..^2];
-                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
-                    string wildcardParameterName = $"@{parameterPrefix}Wildcard{i}";
-
-                    predicates.Add($"({columnName} = {exactParameterName} OR {columnName} LIKE {wildcardParameterName})");
-                    command.Parameters.AddWithValue(exactParameterName, versionPrefix);
-                    command.Parameters.AddWithValue(wildcardParameterName, $"{versionPrefix}.%");
-                }
-                else
-                {
-                    string exactParameterName = $"@{parameterPrefix}Exact{i}";
-
-                    predicates.Add($"{columnName} = {exactParameterName}");
-                    command.Parameters.AddWithValue(exactParameterName, versionPattern);
-                }
-            }
-
-            return string.Join(" OR ", predicates);
         }
 
         private static void EnsureColumnExists(
@@ -420,6 +416,48 @@ namespace DMBDocumentationBuilder
             }
         }
 
+        private static string[] NormalizePurgeVersionPatterns(params string[] versionPatterns)
+        {
+            if (versionPatterns is null) throw new ArgumentNullException(nameof(versionPatterns));
+
+            List<string> normalizedPatterns = new();
+
+            foreach (string? versionPattern in versionPatterns)
+            {
+                if (string.IsNullOrWhiteSpace(versionPattern))
+                {
+                    throw new ArgumentException("Version purge patterns cannot be empty.", nameof(versionPatterns));
+                }
+
+                string trimmedPattern = versionPattern.Trim();
+                int wildcardIndex = trimmedPattern.IndexOf('*', StringComparison.Ordinal);
+
+                if (wildcardIndex >= 0)
+                {
+                    if (!trimmedPattern.EndsWith(".*", StringComparison.Ordinal) || wildcardIndex != trimmedPattern.Length - 1)
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported version purge pattern '{trimmedPattern}'. Only terminal wildcards such as '1.2.*' are supported.",
+                            nameof(versionPatterns));
+                    }
+
+                    string prefix = trimmedPattern[..^2];
+
+                    if (string.IsNullOrWhiteSpace(prefix))
+                    {
+                        throw new ArgumentException("The '*' purge pattern is not supported.", nameof(versionPatterns));
+                    }
+                }
+
+                if (!normalizedPatterns.Contains(trimmedPattern, StringComparer.Ordinal))
+                {
+                    normalizedPatterns.Add(trimmedPattern);
+                }
+            }
+
+            return normalizedPatterns.ToArray();
+        }
+
         /// <summary>
         ///     Removes persisted documentation records for obsolete documentation versions.
         /// </summary>
@@ -488,58 +526,16 @@ namespace DMBDocumentationBuilder
                     normalizedVersionPatterns);
 
                 deleteSidebarCommand.CommandText = $"""
-                                                     DELETE FROM DocumentationSidebarItems
-                                                     WHERE {sidebarVersionPredicate}
-                                                        OR {sidebarRouteVersionPredicate}
-                                                     """;
+                                                    DELETE FROM DocumentationSidebarItems
+                                                    WHERE {sidebarVersionPredicate}
+                                                       OR {sidebarRouteVersionPredicate}
+                                                    """;
                 deletedRowCount += deleteSidebarCommand.ExecuteNonQuery();
             }
 
             transaction.Commit();
 
             return deletedRowCount;
-        }
-
-        private static string[] NormalizePurgeVersionPatterns(params string[] versionPatterns)
-        {
-            if (versionPatterns is null) throw new ArgumentNullException(nameof(versionPatterns));
-
-            List<string> normalizedPatterns = new();
-
-            foreach (string? versionPattern in versionPatterns)
-            {
-                if (string.IsNullOrWhiteSpace(versionPattern))
-                {
-                    throw new ArgumentException("Version purge patterns cannot be empty.", nameof(versionPatterns));
-                }
-
-                string trimmedPattern = versionPattern.Trim();
-                int wildcardIndex = trimmedPattern.IndexOf('*', StringComparison.Ordinal);
-
-                if (wildcardIndex >= 0)
-                {
-                    if (!trimmedPattern.EndsWith(".*", StringComparison.Ordinal) || wildcardIndex != trimmedPattern.Length - 1)
-                    {
-                        throw new ArgumentException(
-                            $"Unsupported version purge pattern '{trimmedPattern}'. Only terminal wildcards such as '1.2.*' are supported.",
-                            nameof(versionPatterns));
-                    }
-
-                    string prefix = trimmedPattern[..^2];
-
-                    if (string.IsNullOrWhiteSpace(prefix))
-                    {
-                        throw new ArgumentException("The '*' purge pattern is not supported.", nameof(versionPatterns));
-                    }
-                }
-
-                if (!normalizedPatterns.Contains(trimmedPattern, StringComparer.Ordinal))
-                {
-                    normalizedPatterns.Add(trimmedPattern);
-                }
-            }
-
-            return normalizedPatterns.ToArray();
         }
 
         /// <summary>

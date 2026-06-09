@@ -8,7 +8,6 @@
 #region
 
 using DMBBootstrapBuilder;
-using DMBPageBuilder;
 using Microsoft.AspNetCore.Mvc;
 
 #endregion

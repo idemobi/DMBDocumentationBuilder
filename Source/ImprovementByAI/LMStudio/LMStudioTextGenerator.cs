@@ -7,14 +7,10 @@
 
 #region
 
-using System;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 #endregion
 
@@ -57,8 +53,9 @@ namespace DMBDocumentationImprovementByLMStudio
 
         #region Instance fields and properties
 
-        private readonly HttpClient _httpClient;
         private readonly bool _hasApiToken;
+
+        private readonly HttpClient _httpClient;
         private readonly string _modelName;
 
         #endregion

@@ -7,10 +7,6 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using DMBBootstrapBuilder;
 using DMBPageBuilder;
@@ -1432,12 +1428,12 @@ namespace DMBDocumentationViewer.Controllers
             {
                 sql += """
 
-                         AND PackageId = @PackageId
-                         AND Version = @Version
-                         AND NamespaceName = @NamespaceName
-                         AND ObjectName = @ObjectName
-                         AND ObjectType = @ObjectType
-                         """;
+                       AND PackageId = @PackageId
+                       AND Version = @Version
+                       AND NamespaceName = @NamespaceName
+                       AND ObjectName = @ObjectName
+                       AND ObjectType = @ObjectType
+                       """;
             }
 
             using var command = new SqliteCommand(sql, connection);

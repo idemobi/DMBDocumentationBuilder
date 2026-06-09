@@ -7,13 +7,8 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using DMBDocumentationImprovementByAI;
 using Microsoft.Data.Sqlite;
 

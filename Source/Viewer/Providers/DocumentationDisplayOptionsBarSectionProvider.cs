@@ -7,8 +7,6 @@
 
 #region
 
-using System;
-using System.IO;
 using DMBBootstrapBuilder;
 using DMBPageBuilder;
 using Microsoft.AspNetCore.Mvc.Rendering;

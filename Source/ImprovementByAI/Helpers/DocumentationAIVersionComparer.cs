@@ -7,9 +7,6 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
-
 #endregion
 
 namespace DMBDocumentationImprovementByAI
@@ -59,6 +56,8 @@ namespace DMBDocumentationImprovementByAI
 
         #region Instance methods
 
+        #region From interface IComparer<string>
+
         public int Compare(string? x, string? y)
         {
             if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase))
@@ -81,6 +80,8 @@ namespace DMBDocumentationImprovementByAI
 
             return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
         }
+
+        #endregion
 
         #endregion
     }

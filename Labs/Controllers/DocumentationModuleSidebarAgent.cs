@@ -18,7 +18,7 @@ namespace DMBDocumentationBuilderLabs.Controllers
     ///     Provides backward-compatible entry points for Documentation module sidebar navigation.
     /// </summary>
     /// <remarks>
-    ///     New hosts should use <see cref="DMBDocumentationBuilderLabsNavigationAgent"/> directly.
+    ///     New hosts should use <see cref="DMBDocumentationBuilderLabsNavigationAgent" /> directly.
     /// </remarks>
     public static class DocumentationModuleSidebarAgent
     {

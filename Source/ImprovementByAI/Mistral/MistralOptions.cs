@@ -5,8 +5,11 @@
 
 #endregion
 
-using System;
+#region
+
 using DMBDocumentationImprovementByAI;
+
+#endregion
 
 namespace DMBDocumentationImprovementByMistral
 {
@@ -48,14 +51,14 @@ namespace DMBDocumentationImprovementByMistral
         public int MaxObjectsToProcess { get; init; } = 0;
 
         /// <summary>
-        ///     Gets the documentation object selection mode used before AI generation starts.
-        /// </summary>
-        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
-
-        /// <summary>
         ///     Gets the Mistral model selected for generation.
         /// </summary>
         public MistralModel Model { get; init; } = MistralModelHelper.GetRecommendedDefault();
+
+        /// <summary>
+        ///     Gets the documentation object selection mode used before AI generation starts.
+        /// </summary>
+        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
 
         /// <summary>
         ///     Gets the project context prompt fragment included in AI requests.

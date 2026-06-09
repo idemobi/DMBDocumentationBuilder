@@ -7,8 +7,6 @@
 
 #region
 
-using System.Collections.Generic;
-using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 

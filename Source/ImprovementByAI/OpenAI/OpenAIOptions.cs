@@ -5,8 +5,11 @@
 
 #endregion
 
-using System;
+#region
+
 using DMBDocumentationImprovementByAI;
+
+#endregion
 
 namespace DMBDocumentationImprovementByOpenAI
 {
@@ -48,14 +51,14 @@ namespace DMBDocumentationImprovementByOpenAI
         public int MaxObjectsToProcess { get; init; } = 0;
 
         /// <summary>
-        ///     Gets the documentation object selection mode used before AI generation starts.
-        /// </summary>
-        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
-
-        /// <summary>
         ///     Gets the OpenAI model selected for generation.
         /// </summary>
         public OpenAIModel Model { get; init; } = OpenAIModel.Gpt54Mini;
+
+        /// <summary>
+        ///     Gets the documentation object selection mode used before AI generation starts.
+        /// </summary>
+        public DocumentationAIObjectSelectionMode ObjectSelectionMode { get; init; } = DocumentationAIObjectSelectionMode.LatestVersion;
 
         /// <summary>
         ///     Gets the project context prompt fragment included in AI requests.

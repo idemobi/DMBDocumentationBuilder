@@ -7,7 +7,6 @@
 
 #region
 
-using System;
 using DMBBootstrapBuilder;
 using DMBDocumentationViewer.Controllers;
 using DMBPageBuilder;
@@ -27,35 +26,6 @@ namespace DMBDocumentationBuilderLabs.Navigation;
 public static class DMBDocumentationBuilderLabsNavigationAgent
 {
     #region Static methods
-
-    private static AspRouteActionItem CreateApiNamespaceAction(string title, string groupName, string packageId, string namespaceName)
-    {
-        return ActionItemFactory.AspRoute("Documentation", "ShowNamespace")
-            .AddRouteValue("groupName", groupName)
-            .AddRouteValue("packageId", packageId)
-            .AddRouteValue("namespaceName", namespaceName)
-            .SetTitle(title)
-            .SetIcon(IconStruct.Bootstrap("bi-journal-code"));
-    }
-
-    private static AspRouteActionItem CreateLabsAction(
-        string controller,
-        string action,
-        string title,
-        string icon,
-        string? currentController = null,
-        string? currentAction = null
-    )
-    {
-        bool active =
-            string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
-
-        return ActionItemFactory.AspRoute(controller, action)
-            .SetTitle(title)
-            .SetIcon(IconStruct.Bootstrap(icon))
-            .SetActive(active);
-    }
 
     /// <summary>
     ///     Adds the standard Documentation-family breadcrumb to a raw Bootstrap controller.
@@ -84,11 +54,21 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
         );
     }
 
+    private static AspRouteActionItem CreateApiNamespaceAction(string title, string groupName, string packageId, string namespaceName)
+    {
+        return ActionItemFactory.AspRoute("Documentation", "ShowNamespace")
+            .AddRouteValue("groupName", groupName)
+            .AddRouteValue("packageId", packageId)
+            .AddRouteValue("namespaceName", namespaceName)
+            .SetTitle(title)
+            .SetIcon(IconStruct.Bootstrap("bi-journal-code"));
+    }
+
     /// <summary>
     ///     Creates the Documentation-family API sidebar section.
     /// </summary>
     /// <param name="title">The section title shown in the sidebar.</param>
-    /// <returns>The configured <see cref="SideBarSectionComponent"/> containing DocumentationViewer API links.</returns>
+    /// <returns>The configured <see cref="SideBarSectionComponent" /> containing DocumentationViewer API links.</returns>
     public static SideBarSectionComponent CreateApiSidebarSection(string title = "API Reference")
     {
         return new SideBarSectionComponent(title)
@@ -101,10 +81,29 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
             );
     }
 
+    private static AspRouteActionItem CreateLabsAction(
+        string controller,
+        string action,
+        string title,
+        string icon,
+        string? currentController = null,
+        string? currentAction = null
+    )
+    {
+        bool active =
+            string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+
+        return ActionItemFactory.AspRoute(controller, action)
+            .SetTitle(title)
+            .SetIcon(IconStruct.Bootstrap(icon))
+            .SetActive(active);
+    }
+
     /// <summary>
     ///     Creates the Documentation-family navbar menu group.
     /// </summary>
-    /// <returns>The configured <see cref="GroupActionItem"/> containing Documentation labs page links.</returns>
+    /// <returns>The configured <see cref="GroupActionItem" /> containing Documentation labs page links.</returns>
     public static GroupActionItem CreateMenuGroup()
     {
         return ActionItemFactory.Group("Documentation", IconStruct.Bootstrap("bi-book"))
@@ -135,7 +134,7 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     /// <param name="includeApiSection">Whether to include the DocumentationViewer API sidebar section.</param>
     /// <param name="sidebarId">The HTML identifier applied to the sidebar component.</param>
     /// <param name="localStorageKey">The browser local-storage key used for sidebar state.</param>
-    /// <returns>The configured <see cref="SideBarComponent"/>.</returns>
+    /// <returns>The configured <see cref="SideBarComponent" />.</returns>
     public static SideBarComponent CreateSidebar(
         string? currentController,
         string? currentAction,
@@ -165,7 +164,7 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     /// </summary>
     /// <param name="currentController">The current MVC controller name used to mark active links.</param>
     /// <param name="currentAction">The current MVC action name used to mark active links.</param>
-    /// <returns>The configured <see cref="SideBarSectionComponent"/>.</returns>
+    /// <returns>The configured <see cref="SideBarSectionComponent" />.</returns>
     public static SideBarSectionComponent CreateSidebarSection(string? currentController, string? currentAction)
     {
         return new SideBarSectionComponent("Documentation")
@@ -192,7 +191,10 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     ///     Determines whether a controller belongs to the DMBDocumentationBuilder labs module.
     /// </summary>
     /// <param name="controllerName">The MVC controller name to evaluate.</param>
-    /// <returns><see langword="true"/> when the controller is part of the Documentation labs module; otherwise, <see langword="false"/>.</returns>
+    /// <returns>
+    ///     <see langword="true" /> when the controller is part of the Documentation labs module; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
     public static bool IsModuleController(string? controllerName)
     {
         return string.Equals(controllerName, "DocumentationHome", StringComparison.OrdinalIgnoreCase) ||
@@ -204,7 +206,7 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     ///     Resolves the Bootstrap icon for a Documentation-family labs action.
     /// </summary>
     /// <param name="actionName">The MVC action name to resolve.</param>
-    /// <returns>The icon value represented as an <see cref="IconStruct"/>.</returns>
+    /// <returns>The icon value represented as an <see cref="IconStruct" />.</returns>
     public static IconStruct ResolveActionIcon(string? actionName)
     {
         return actionName switch
@@ -250,7 +252,7 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
     ///     Resolves the Bootstrap icon for a Documentation-family labs controller.
     /// </summary>
     /// <param name="controllerName">The MVC controller name to resolve.</param>
-    /// <returns>The icon value represented as an <see cref="IconStruct"/>.</returns>
+    /// <returns>The icon value represented as an <see cref="IconStruct" />.</returns>
     public static IconStruct ResolveControllerIcon(string? controllerName)
     {
         return controllerName switch
@@ -286,6 +288,8 @@ public sealed class DMBDocumentationBuilderLabsDocumentationSidebarProvider : ID
 {
     #region Instance methods
 
+    #region From interface IDocumentationSidebarProvider
+
     /// <inheritdoc />
     public SideBarSectionComponent CreateGroupSidebar(string groupName)
     {
@@ -303,6 +307,8 @@ public sealed class DMBDocumentationBuilderLabsDocumentationSidebarProvider : ID
     {
         return DMBDocumentationBuilderLabsNavigationAgent.CreateApiSidebarSection();
     }
+
+    #endregion
 
     #endregion
 }

@@ -7,7 +7,6 @@
 
 #region
 
-using System;
 using System.Text;
 using Microsoft.Data.Sqlite;
 

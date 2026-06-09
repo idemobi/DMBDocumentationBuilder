@@ -7,16 +7,10 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using DMBDocumentationImprovementByAI;
 using Microsoft.Data.Sqlite;
 

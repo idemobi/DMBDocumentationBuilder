@@ -7,10 +7,6 @@
 
 #region
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -54,45 +50,6 @@ namespace DMBDocumentationBuilder
 
             RemoveProgramCsRegistration(websiteRoot);
             RemoveCsprojDatabaseConfig(websiteRoot);
-        }
-
-        /// <summary>
-        ///     Removes generated documentation database records for obsolete versions hosted by a target website project.
-        /// </summary>
-        /// <param name="websiteProjectRelativePath">
-        ///     The relative or absolute path to the website project that hosts generated documentation.
-        /// </param>
-        /// <param name="versionPatterns">
-        ///     The version values or terminal wildcard patterns to remove. Exact values are normalized with the same
-        ///     major/minor rules used by generated project metadata. Patterns ending with <c>.*</c>, such as <c>1.2.*</c>,
-        ///     are passed through as prefix matches.
-        /// </param>
-        /// <returns>The total number of database rows removed from generated documentation metadata.</returns>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="websiteProjectRelativePath" /> is empty.</exception>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="versionPatterns" /> is <c>null</c>.</exception>
-        /// <remarks>
-        ///     This method is intended for prebuild programs that need to remove old generated versions before or after
-        ///     calling <see cref="Run" />.
-        /// </remarks>
-        public static int PurgeVersions(
-            string websiteProjectRelativePath,
-            params string[] versionPatterns
-        )
-        {
-            Console.WriteLine($"DocumentationLauncher : Purge versions on {websiteProjectRelativePath}");
-            if (string.IsNullOrWhiteSpace(websiteProjectRelativePath)) throw new ArgumentException("Invalid path.", nameof(websiteProjectRelativePath));
-            if (versionPatterns is null) throw new ArgumentNullException(nameof(versionPatterns));
-
-            string websiteRoot = GetWebsiteRoot(websiteProjectRelativePath);
-            string sqliteDatabasePath = Path.Combine(websiteRoot, "Documentation", "data.db");
-
-            if (!File.Exists(sqliteDatabasePath)) return 0;
-
-            string[] normalizedVersionPatterns = versionPatterns
-                .Select(NormalizePurgeVersionPattern)
-                .ToArray();
-
-            return DocumentationDatabaseManager.PurgeVersions(sqliteDatabasePath, normalizedVersionPatterns);
         }
 
         private static DocumentationProjectDescriptor CreateReferencedProjectDescriptor(string projectFilePath)
@@ -229,6 +186,20 @@ namespace DMBDocumentationBuilder
                 websiteProjectRelativePath));
         }
 
+        private static string NormalizePurgeVersionPattern(string rawVersionPattern)
+        {
+            if (string.IsNullOrWhiteSpace(rawVersionPattern)) return string.Empty;
+
+            string versionPattern = rawVersionPattern.Trim();
+
+            if (versionPattern.Contains('*', StringComparison.Ordinal))
+            {
+                return versionPattern;
+            }
+
+            return NormalizeVersion(versionPattern);
+        }
+
         private static string NormalizeVersion(string rawVersion)
         {
             if (string.IsNullOrWhiteSpace(rawVersion) || rawVersion.Contains("unknown"))
@@ -248,18 +219,43 @@ namespace DMBDocumentationBuilder
             return $"{parts[0]}.{parts[1]}";
         }
 
-        private static string NormalizePurgeVersionPattern(string rawVersionPattern)
+        /// <summary>
+        ///     Removes generated documentation database records for obsolete versions hosted by a target website project.
+        /// </summary>
+        /// <param name="websiteProjectRelativePath">
+        ///     The relative or absolute path to the website project that hosts generated documentation.
+        /// </param>
+        /// <param name="versionPatterns">
+        ///     The version values or terminal wildcard patterns to remove. Exact values are normalized with the same
+        ///     major/minor rules used by generated project metadata. Patterns ending with <c>.*</c>, such as <c>1.2.*</c>,
+        ///     are passed through as prefix matches.
+        /// </param>
+        /// <returns>The total number of database rows removed from generated documentation metadata.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="websiteProjectRelativePath" /> is empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="versionPatterns" /> is <c>null</c>.</exception>
+        /// <remarks>
+        ///     This method is intended for prebuild programs that need to remove old generated versions before or after
+        ///     calling <see cref="Run" />.
+        /// </remarks>
+        public static int PurgeVersions(
+            string websiteProjectRelativePath,
+            params string[] versionPatterns
+        )
         {
-            if (string.IsNullOrWhiteSpace(rawVersionPattern)) return string.Empty;
+            Console.WriteLine($"DocumentationLauncher : Purge versions on {websiteProjectRelativePath}");
+            if (string.IsNullOrWhiteSpace(websiteProjectRelativePath)) throw new ArgumentException("Invalid path.", nameof(websiteProjectRelativePath));
+            if (versionPatterns is null) throw new ArgumentNullException(nameof(versionPatterns));
 
-            string versionPattern = rawVersionPattern.Trim();
+            string websiteRoot = GetWebsiteRoot(websiteProjectRelativePath);
+            string sqliteDatabasePath = Path.Combine(websiteRoot, "Documentation", "data.db");
 
-            if (versionPattern.Contains('*', StringComparison.Ordinal))
-            {
-                return versionPattern;
-            }
+            if (!File.Exists(sqliteDatabasePath)) return 0;
 
-            return NormalizeVersion(versionPattern);
+            string[] normalizedVersionPatterns = versionPatterns
+                .Select(NormalizePurgeVersionPattern)
+                .ToArray();
+
+            return DocumentationDatabaseManager.PurgeVersions(sqliteDatabasePath, normalizedVersionPatterns);
         }
 
         private static (string PackageId, string Version) ReadProjectMetadata(string projectFilePath)

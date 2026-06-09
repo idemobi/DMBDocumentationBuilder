@@ -19,13 +19,29 @@ namespace DMBDocumentationBuilderLabs.Helpers
     /// </summary>
     public static class DMBDocumentationBuilderLabsViewExtensions
     {
+        #region Static methods
+
+        #region RowBuilder
+
+        /// <summary>
+        ///     Applies pillar grid spacing.
+        /// </summary>
+        /// <param name="builder">The row builder to configure.</param>
+        /// <returns>The configured <see cref="RowBuilder" />.</returns>
+        public static RowBuilder AsPillarGrid(this RowBuilder builder)
+            => builder.AddClass("g-4 mt-2");
+
+        #endregion
+
+        #endregion
+
         #region PB_ParagraphBuilder
 
         /// <summary>
         ///     Applies muted text styling to a paragraph.
         /// </summary>
         /// <param name="builder">The paragraph builder to configure.</param>
-        /// <returns>The configured <see cref="PB_ParagraphBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_ParagraphBuilder" />.</returns>
         public static PB_ParagraphBuilder AsMuted(this PB_ParagraphBuilder builder)
             => builder.AddClass("text-muted");
 
@@ -33,7 +49,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies lead paragraph styling to a paragraph.
         /// </summary>
         /// <param name="builder">The paragraph builder to configure.</param>
-        /// <returns>The configured <see cref="PB_ParagraphBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_ParagraphBuilder" />.</returns>
         public static PB_ParagraphBuilder AsLead(this PB_ParagraphBuilder builder)
             => builder.AddClass("lead");
 
@@ -41,7 +57,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies small muted text styling to a paragraph.
         /// </summary>
         /// <param name="builder">The paragraph builder to configure.</param>
-        /// <returns>The configured <see cref="PB_ParagraphBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_ParagraphBuilder" />.</returns>
         public static PB_ParagraphBuilder AsSmallMuted(this PB_ParagraphBuilder builder)
             => builder.AddClass("small text-muted");
 
@@ -49,7 +65,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Removes the bottom margin from a paragraph.
         /// </summary>
         /// <param name="builder">The paragraph builder to configure.</param>
-        /// <returns>The configured <see cref="PB_ParagraphBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_ParagraphBuilder" />.</returns>
         public static PB_ParagraphBuilder AsNoMargin(this PB_ParagraphBuilder builder)
             => builder.AddClass("mb-0");
 
@@ -61,7 +77,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies the first section heading spacing used by the labs pages.
         /// </summary>
         /// <param name="builder">The title builder to configure.</param>
-        /// <returns>The configured <see cref="TitleBuilder"/>.</returns>
+        /// <returns>The configured <see cref="TitleBuilder" />.</returns>
         public static TitleBuilder AsSectionHeading(this TitleBuilder builder)
             => builder.AddClass("mb-4");
 
@@ -69,7 +85,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies subsequent section heading spacing used by the labs pages.
         /// </summary>
         /// <param name="builder">The title builder to configure.</param>
-        /// <returns>The configured <see cref="TitleBuilder"/>.</returns>
+        /// <returns>The configured <see cref="TitleBuilder" />.</returns>
         public static TitleBuilder AsSubSectionHeading(this TitleBuilder builder)
             => builder.AddClass("mb-4 mt-5");
 
@@ -77,7 +93,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies Bootstrap h4 sizing to a title.
         /// </summary>
         /// <param name="builder">The title builder to configure.</param>
-        /// <returns>The configured <see cref="TitleBuilder"/>.</returns>
+        /// <returns>The configured <see cref="TitleBuilder" />.</returns>
         public static TitleBuilder AsH4(this TitleBuilder builder)
             => builder.AddClass("h4");
 
@@ -85,7 +101,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Removes bottom margin from a title.
         /// </summary>
         /// <param name="builder">The title builder to configure.</param>
-        /// <returns>The configured <see cref="TitleBuilder"/>.</returns>
+        /// <returns>The configured <see cref="TitleBuilder" />.</returns>
         public static TitleBuilder AsCompact(this TitleBuilder builder)
             => builder.AddClass("mb-0");
 
@@ -93,7 +109,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies Bootstrap alert heading styling to a title.
         /// </summary>
         /// <param name="builder">The title builder to configure.</param>
-        /// <returns>The configured <see cref="TitleBuilder"/>.</returns>
+        /// <returns>The configured <see cref="TitleBuilder" />.</returns>
         public static TitleBuilder AsAlertHeading(this TitleBuilder builder)
             => builder.AddClass("alert-heading");
 
@@ -105,7 +121,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies monospace font styling to a span.
         /// </summary>
         /// <param name="builder">The span builder to configure.</param>
-        /// <returns>The configured <see cref="PB_SpanBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_SpanBuilder" />.</returns>
         public static PB_SpanBuilder AsMonospace(this PB_SpanBuilder builder)
             => builder.AddClass("font-monospace");
 
@@ -113,7 +129,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies small monospace font styling to a span.
         /// </summary>
         /// <param name="builder">The span builder to configure.</param>
-        /// <returns>The configured <see cref="PB_SpanBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_SpanBuilder" />.</returns>
         public static PB_SpanBuilder AsMonospaceSmall(this PB_SpanBuilder builder)
             => builder.AddClass("font-monospace small");
 
@@ -121,7 +137,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies bold font styling to a span.
         /// </summary>
         /// <param name="builder">The span builder to configure.</param>
-        /// <returns>The configured <see cref="PB_SpanBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_SpanBuilder" />.</returns>
         public static PB_SpanBuilder AsBold(this PB_SpanBuilder builder)
             => builder.AddClass("fw-bold");
 
@@ -129,7 +145,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies semi-bold font styling to a span.
         /// </summary>
         /// <param name="builder">The span builder to configure.</param>
-        /// <returns>The configured <see cref="PB_SpanBuilder"/>.</returns>
+        /// <returns>The configured <see cref="PB_SpanBuilder" />.</returns>
         public static PB_SpanBuilder AsSemiBold(this PB_SpanBuilder builder)
             => builder.AddClass("fw-semibold");
 
@@ -141,7 +157,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Centers text inside a block.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsTextCenter(this BlockBuilder builder)
             => builder.AddClass("text-center");
 
@@ -149,7 +165,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies standard section content spacing.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsSectionContent(this BlockBuilder builder)
             => builder.AddClass("container-lg px-4 pb-5");
 
@@ -157,7 +173,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies standard section content spacing with top padding.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsSectionContentTop(this BlockBuilder builder)
             => builder.AddClass("container-lg px-4 pt-4 pb-5");
 
@@ -165,7 +181,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies sidebar card styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsSidebarCard(this BlockBuilder builder)
             => builder.AddClass("border-0 shadow-sm rounded-4 overflow-hidden");
 
@@ -173,7 +189,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies sidebar note styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsSidebarNote(this BlockBuilder builder)
             => builder.AddClass("mt-4 p-4 bg-body-secondary rounded-4 shadow-sm");
 
@@ -181,7 +197,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies sidebar row styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsSidebarRow(this BlockBuilder builder)
             => builder.AddClass("border-top py-2");
 
@@ -189,7 +205,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies pillar card styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsPillarCard(this BlockBuilder builder)
             => builder.AddClass("p-3 border rounded-4 h-100 shadow-sm");
 
@@ -197,7 +213,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies benefit row styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsBenefitRow(this BlockBuilder builder)
             => builder.AddClass("mb-3 d-flex align-items-start");
 
@@ -205,7 +221,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies timeline step styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsTimelineStep(this BlockBuilder builder)
             => builder.AddClass("position-relative ps-5 border-start border-2 border-primary mb-5");
 
@@ -214,7 +230,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
         /// <param name="bgClass">The Bootstrap background class to apply.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsTimelineStepBadge(this BlockBuilder builder, string bgClass = "bg-primary")
             => builder
                 .AddClass($"position-absolute top-0 start-0 translate-middle-x {bgClass} text-white rounded-circle d-flex align-items-center justify-content-center")
@@ -226,7 +242,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies information callout styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsInfoCallout(this BlockBuilder builder)
             => builder.AddClass("alert alert-info border-0 shadow-sm rounded-4 p-4 my-4");
 
@@ -234,7 +250,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies callout icon spacing.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsCalloutIcon(this BlockBuilder builder)
             => builder.AddClass("me-3");
 
@@ -242,7 +258,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies top margin spacing.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsTopMargin(this BlockBuilder builder)
             => builder.AddClass("mt-3");
 
@@ -250,7 +266,7 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies uniform padding.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsPaddedBlock(this BlockBuilder builder)
             => builder.AddClass("p-4");
 
@@ -258,21 +274,9 @@ namespace DMBDocumentationBuilderLabs.Helpers
         ///     Applies preview wrapper styling.
         /// </summary>
         /// <param name="builder">The block builder to configure.</param>
-        /// <returns>The configured <see cref="BlockBuilder"/>.</returns>
+        /// <returns>The configured <see cref="BlockBuilder" />.</returns>
         public static BlockBuilder AsPreviewWrapper(this BlockBuilder builder)
             => builder.AddClass("rounded-3 overflow-hidden");
-
-        #endregion
-
-        #region RowBuilder
-
-        /// <summary>
-        ///     Applies pillar grid spacing.
-        /// </summary>
-        /// <param name="builder">The row builder to configure.</param>
-        /// <returns>The configured <see cref="RowBuilder"/>.</returns>
-        public static RowBuilder AsPillarGrid(this RowBuilder builder)
-            => builder.AddClass("g-4 mt-2");
 
         #endregion
     }
