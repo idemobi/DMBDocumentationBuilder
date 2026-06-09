@@ -2,6 +2,7 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
     const storageKey = "documentation_display_options";
     const memberKinds = ["constructor", "field", "property", "method", "event", "extension-method"];
     const accessKinds = ["public", "protected", "internal", "private"];
+    const elementKinds = ["dependency-graph"];
 
     let state = loadState();
 
@@ -12,6 +13,9 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
             })),
             access: Object.fromEntries(accessKinds.map(function (access) {
                 return [access, true];
+            })),
+            elements: Object.fromEntries(elementKinds.map(function (element) {
+                return [element, true];
             }))
         };
     }
@@ -32,7 +36,8 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
             const parsed = JSON.parse(raw);
             return {
                 kinds: Object.assign({}, defaults.kinds, parsed.kinds || {}),
-                access: Object.assign({}, defaults.access, parsed.access || {})
+                access: Object.assign({}, defaults.access, parsed.access || {}),
+                elements: Object.assign({}, defaults.elements, parsed.elements || {})
             };
         } catch {
             return defaults;
@@ -126,6 +131,10 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
             if (group === "access") {
                 control.checked = state.access[value] !== false;
             }
+
+            if (group === "element") {
+                control.checked = state.elements[value] !== false;
+            }
         });
     }
 
@@ -142,6 +151,8 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
                 control.disabled = members.every(function (member) {
                     return !getAccessBuckets(member.getAttribute("data-doc-member-accessibility")).includes(value);
                 });
+            } else if (group === "element") {
+                control.disabled = document.querySelector('[data-doc-display-element="' + value + '"]') === null;
             }
         });
     }
@@ -149,13 +160,15 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
     function updateCounts() {
         const allMembers = document.querySelectorAll("[data-doc-member]");
         const visibleMembers = document.querySelectorAll('[data-doc-member]:not([data-doc-filter-hidden="true"])');
+        const elements = document.querySelectorAll("[data-doc-display-element]");
         const hasMembers = allMembers.length > 0;
+        const hasDisplayOptions = hasMembers || elements.length > 0;
 
         document.querySelectorAll("[data-doc-display-root]").forEach(function (root) {
             root.hidden = false;
-            root.setAttribute("aria-disabled", hasMembers ? "false" : "true");
+            root.setAttribute("aria-disabled", hasDisplayOptions ? "false" : "true");
 
-            if (hasMembers) {
+            if (hasDisplayOptions) {
                 root.removeAttribute("data-doc-display-disabled");
             } else {
                 root.setAttribute("data-doc-display-disabled", "true");
@@ -187,6 +200,11 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
     function apply(persist) {
         document.querySelectorAll("[data-doc-member]").forEach(function (member) {
             member.setAttribute("data-doc-filter-hidden", memberIsVisible(member) ? "false" : "true");
+        });
+
+        document.querySelectorAll("[data-doc-display-element]").forEach(function (element) {
+            const elementKind = element.getAttribute("data-doc-display-element") || "";
+            element.setAttribute("data-doc-display-element-hidden", state.elements[elementKind] === false ? "true" : "false");
         });
 
         updateGroupVisibility();
@@ -243,6 +261,10 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
                     state.access[value] = control.checked;
                 }
 
+                if (group === "element") {
+                    state.elements[value] = control.checked;
+                }
+
                 apply(true);
             });
         });
@@ -258,6 +280,11 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
         apply(true);
     }
 
+    function setElement(element, enabled) {
+        state.elements[element] = enabled === true || enabled === "true";
+        apply(true);
+    }
+
     function init() {
         bindControls();
         apply(false);
@@ -267,6 +294,7 @@ window.DocumentationDisplayOptions = window.DocumentationDisplayOptions || (func
         init: init,
         setAccess: setAccess,
         setKind: setKind,
+        setElement: setElement,
         setPreset: applyPreset
     };
 })();

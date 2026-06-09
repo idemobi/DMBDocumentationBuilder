@@ -48,6 +48,19 @@ namespace DMBDocumentationViewer
                 .SetDataAttribut("doc-display-toggle", kind);
         }
 
+        private static ToggleActionItem CreateElementToggle(string title, string element, string iconBootstrap)
+        {
+            return new ToggleActionItem
+                {
+                    Title = title,
+                    Icon = IconStruct.Bootstrap(iconBootstrap),
+                    SwitchValue = true,
+                    SwitchJavaScript = $"DocumentationDisplayOptions.setElement('{element}', this.checked);"
+                }
+                .SetDataAttribut("doc-display-group", "element")
+                .SetDataAttribut("doc-display-toggle", element);
+        }
+
         #endregion
 
         #region Instance fields and properties
@@ -92,6 +105,7 @@ namespace DMBDocumentationViewer
             members.AddItem(CreateKindToggle("Methods", "method", "bi-code-slash"));
             members.AddItem(CreateKindToggle("Events", "event", "bi-broadcast"));
             members.AddItem(CreateKindToggle("Extensions", "extension-method", "bi-plugin"));
+            members.AddItem(CreateElementToggle("Dependency", "dependency-graph", "bi-diagram-3"));
 
             group.AddItem(new DividerActionItem());
 

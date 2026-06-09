@@ -26,6 +26,7 @@
 }
 
 [data-doc-filter-hidden="true"],
+[data-doc-display-element-hidden="true"],
 [data-doc-section-hidden="true"],
 [data-doc-group-hidden="true"] {
     display: none !important;
