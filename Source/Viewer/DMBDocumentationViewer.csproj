@@ -80,7 +80,7 @@
         </Otherwise>
     </Choose>
     <ItemGroup Label="Import package">
-        <PackageReference Include="ChilliCream.ModelContextProtocol.AspNetCore" Version="1.3.0" />
+        <PackageReference Include="ChilliCream.ModelContextProtocol.AspNetCore" Version="1.4.0" />
         <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.9" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
     </ItemGroup>
