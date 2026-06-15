@@ -8,7 +8,7 @@
 #region
 
 using DMBBootstrapBuilder;
-using DMBDocumentationViewer.Controllers;
+using DMBDocumentationViewer;
 using DMBPageBuilder;
 
 #endregion
@@ -75,7 +75,7 @@ public static class DMBDocumentationBuilderLabsNavigationAgent
             .Add(
                 CreateApiNamespaceAction("DMBDocumentationBuilder API", "NuGet", "DMBDocumentationBuilder", "DMBDocumentationBuilder"),
                 CreateApiNamespaceAction("DMBDocumentationViewer API", "NuGet", "DMBDocumentationViewer", "DMBDocumentationViewer"),
-                CreateApiNamespaceAction("DMBDocumentationTest API", "Documentation coverage", "DMBDocumentationTest", "DMBDocumentationTest.Coverage"),
+                CreateApiNamespaceAction("DMBDocumentationTest API", "Documentation coverage", "DMBDocumentationTest", "DMBDocumentationTest"),
                 CreateApiNamespaceAction("DMBDocumentationImprovementByAI API", "NuGet", "DMBDocumentationImprovementByAI", "DMBDocumentationImprovementByAI"),
                 CreateApiNamespaceAction("DMBExampleToRaw API", "NuGet", "DMBExampleToRaw", "DMBExampleToRaw")
             );

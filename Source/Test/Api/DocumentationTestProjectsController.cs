@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 #endregion
 
-namespace DMBDocumentationTest.Api
+namespace DMBDocumentationTest
 {
     /// <summary>
     ///     Covers nested route resources, route constraints, and query flags for OpenAPI documentation tests.

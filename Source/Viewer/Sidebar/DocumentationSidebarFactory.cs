@@ -11,7 +11,7 @@ using DMBBootstrapBuilder;
 
 #endregion
 
-namespace DMBDocumentationViewer.Controllers
+namespace DMBDocumentationViewer
 {
     /// <summary>
     ///     Creates DocumentationViewer sidebar sections through an optional host-provided provider.

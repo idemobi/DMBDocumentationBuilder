@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 #endregion
 
-namespace DMBDocumentationTest.Api
+namespace DMBDocumentationTest
 {
     /// <summary>
     ///     Covers file upload, file download, and binary response metadata for OpenAPI documentation tests.

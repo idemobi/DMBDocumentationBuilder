@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis;
 
 #endregion
 
-namespace DMBDocumentationBuilder.Shared
+namespace DMBDocumentationBuilder
 {
     internal static class DocumentationSymbolDisplayFormat
     {

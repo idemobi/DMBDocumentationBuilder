@@ -15,6 +15,11 @@ namespace DMBDocumentationBuilder
         #region Instance fields and properties
 
         /// <summary>
+        ///     Gets or sets the relationship label rendered between the source and target elements.
+        /// </summary>
+        public string RelationshipKind { get; init; } = string.Empty;
+
+        /// <summary>
         ///     Gets or sets the group name that owns the source element.
         /// </summary>
         public string SourceGroupName { get; init; } = string.Empty;
@@ -43,11 +48,6 @@ namespace DMBDocumentationBuilder
         ///     Gets or sets the package version that owns the source element.
         /// </summary>
         public string SourceVersion { get; init; } = string.Empty;
-
-        /// <summary>
-        ///     Gets or sets the relationship label rendered between the source and target elements.
-        /// </summary>
-        public string RelationshipKind { get; init; } = string.Empty;
 
         /// <summary>
         ///     Gets or sets the group name that owns the target element.

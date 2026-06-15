@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 
 #endregion
 
-namespace DMBDocumentationViewer.Controllers
+namespace DMBDocumentationViewer
 {
     /// <summary>
     ///     Renders generated Markdown documentation content from the documentation database.

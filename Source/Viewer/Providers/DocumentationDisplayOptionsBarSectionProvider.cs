@@ -35,19 +35,6 @@ namespace DMBDocumentationViewer
                 .SetDataAttribut("doc-display-toggle", access);
         }
 
-        private static ToggleActionItem CreateKindToggle(string title, string kind, string iconBootstrap)
-        {
-            return new ToggleActionItem
-                {
-                    Title = title,
-                    Icon = IconStruct.Bootstrap(iconBootstrap),
-                    SwitchValue = true,
-                    SwitchJavaScript = $"DocumentationDisplayOptions.setKind('{kind}', this.checked);"
-                }
-                .SetDataAttribut("doc-display-group", "kind")
-                .SetDataAttribut("doc-display-toggle", kind);
-        }
-
         private static ToggleActionItem CreateElementToggle(string title, string element, string iconBootstrap)
         {
             return new ToggleActionItem
@@ -59,6 +46,19 @@ namespace DMBDocumentationViewer
                 }
                 .SetDataAttribut("doc-display-group", "element")
                 .SetDataAttribut("doc-display-toggle", element);
+        }
+
+        private static ToggleActionItem CreateKindToggle(string title, string kind, string iconBootstrap)
+        {
+            return new ToggleActionItem
+                {
+                    Title = title,
+                    Icon = IconStruct.Bootstrap(iconBootstrap),
+                    SwitchValue = true,
+                    SwitchJavaScript = $"DocumentationDisplayOptions.setKind('{kind}', this.checked);"
+                }
+                .SetDataAttribut("doc-display-group", "kind")
+                .SetDataAttribut("doc-display-toggle", kind);
         }
 
         #endregion

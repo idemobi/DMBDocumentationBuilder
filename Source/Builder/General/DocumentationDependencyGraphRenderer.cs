@@ -17,6 +17,172 @@ namespace DMBDocumentationBuilder
     {
         #region Static methods
 
+        private static void AppendRelationshipMarker(StringBuilder sb, string markerId, string color, bool useCircleMarker)
+        {
+            sb.Append("                                    <marker id=\"")
+                .Append(markerId)
+                .Append(useCircleMarker
+                    ? "\" markerWidth=\"8\" markerHeight=\"8\" refX=\"4\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\">"
+                    : "\" markerWidth=\"8\" markerHeight=\"8\" refX=\"6\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\">")
+                .AppendLine();
+
+            if (useCircleMarker)
+            {
+                sb.Append("                                        <circle cx=\"4\" cy=\"4\" r=\"3\" fill=\"")
+                    .Append(color)
+                    .AppendLine("\" fill-opacity=\"0.72\"></circle>");
+            }
+            else
+            {
+                sb.Append("                                        <path d=\"M0,0 L0,6 L7,3 z\" fill=\"")
+                    .Append(color)
+                    .AppendLine("\" fill-opacity=\"0.72\"></path>");
+            }
+
+            sb.AppendLine("                                    </marker>");
+        }
+
+        private static void AppendRelationshipMarkers(StringBuilder sb)
+        {
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Extends", false), GetRelationshipColor("Extends"), false);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Extends", true), GetRelationshipColor("Extends"), true);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Inherits", false), GetRelationshipColor("Inherits"), false);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Inherits", true), GetRelationshipColor("Inherits"), true);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Implements", false), GetRelationshipColor("Implements"), false);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Implements", true), GetRelationshipColor("Implements"), true);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Uses", false), GetRelationshipColor("Uses"), false);
+            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Uses", true), GetRelationshipColor("Uses"), true);
+        }
+
+        private static void AppendZoomScript(StringBuilder sb)
+        {
+            sb.AppendLine("                        <script>");
+            sb.AppendLine("                            (function () {");
+            sb.AppendLine("                                document.querySelectorAll('[data-documentation-dependency-graph=\"true\"]').forEach(function (graph) {");
+            sb.AppendLine("                                    if (graph.dataset.documentationDependencyZoomReady === 'true') return;");
+            sb.AppendLine("                                    graph.dataset.documentationDependencyZoomReady = 'true';");
+            sb.AppendLine("                                    var section = graph.closest('section');");
+            sb.AppendLine("                                    if (!section) return;");
+            sb.AppendLine("                                    var svg = graph.querySelector('[data-documentation-dependency-svg=\"true\"]');");
+            sb.AppendLine("                                    var canvas = graph.querySelector('[data-documentation-dependency-canvas=\"true\"]');");
+            sb.AppendLine("                                    if (!svg || !canvas) return;");
+            sb.AppendLine("                                    var valueLabel = section.querySelector('[data-documentation-dependency-zoom-value=\"true\"]');");
+            sb.AppendLine("                                    var baseWidth = Number(canvas.dataset.documentationDependencyBaseWidth) || 1098;");
+            sb.AppendLine("                                    var baseHeight = Number(canvas.dataset.documentationDependencyBaseHeight) || 240;");
+            sb.AppendLine("                                    var baseViewBox = svg.getAttribute('viewBox') || '0 0 ' + baseWidth + ' ' + baseHeight;");
+            sb.AppendLine("                                    var zoom = 1;");
+            sb.AppendLine("                                    function applyZoom() {");
+            sb.AppendLine("                                        var centerX = graph.scrollLeft + graph.clientWidth / 2;");
+            sb.AppendLine("                                        var centerY = graph.scrollTop + graph.clientHeight / 2;");
+            sb.AppendLine("                                        var ratioX = centerX / Math.max(1, graph.scrollWidth);");
+            sb.AppendLine("                                        var ratioY = centerY / Math.max(1, graph.scrollHeight);");
+            sb.AppendLine("                                        var width = Math.round(baseWidth * zoom);");
+            sb.AppendLine("                                        var height = Math.round(baseHeight * zoom);");
+            sb.AppendLine("                                        canvas.style.width = width + 'px';");
+            sb.AppendLine("                                        canvas.style.height = height + 'px';");
+            sb.AppendLine("                                        svg.style.width = width + 'px';");
+            sb.AppendLine("                                        svg.style.height = height + 'px';");
+            sb.AppendLine("                                        svg.setAttribute('viewBox', baseViewBox);");
+            sb.AppendLine("                                        if (valueLabel) valueLabel.textContent = Math.round(zoom * 100) + '%';");
+            sb.AppendLine("                                        window.requestAnimationFrame(function () {");
+            sb.AppendLine("                                            graph.scrollLeft = ratioX * graph.scrollWidth - graph.clientWidth / 2;");
+            sb.AppendLine("                                            graph.scrollTop = ratioY * graph.scrollHeight - graph.clientHeight / 2;");
+            sb.AppendLine("                                        });");
+            sb.AppendLine("                                    }");
+            sb.AppendLine("                                    section.querySelectorAll('[data-documentation-dependency-zoom]').forEach(function (button) {");
+            sb.AppendLine("                                        button.addEventListener('click', function () {");
+            sb.AppendLine("                                            var action = button.getAttribute('data-documentation-dependency-zoom');");
+            sb.AppendLine("                                            if (action === 'in') zoom = Math.min(2.4, zoom + 0.2);");
+            sb.AppendLine("                                            if (action === 'out') zoom = Math.max(0.6, zoom - 0.2);");
+            sb.AppendLine("                                            if (action === 'reset') zoom = 1;");
+            sb.AppendLine("                                            applyZoom();");
+            sb.AppendLine("                                        });");
+            sb.AppendLine("                                    });");
+            sb.AppendLine("                                    applyZoom();");
+            sb.AppendLine("                                });");
+            sb.AppendLine("                            })();");
+            sb.AppendLine("                        </script>");
+        }
+
+        private static string Attribute(string? value)
+        {
+            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+        }
+
+        private static string BuildObjectRoutePath(
+            string packageId,
+            string version,
+            string groupName,
+            string namespaceName,
+            string objectName
+        )
+        {
+            StringBuilder sb = new();
+            sb.Append("/Documentation/Show?packageId=")
+                .Append(System.Net.WebUtility.UrlEncode(packageId))
+                .Append("&version=")
+                .Append(System.Net.WebUtility.UrlEncode(version))
+                .Append("&groupName=")
+                .Append(System.Net.WebUtility.UrlEncode(groupName))
+                .Append("&namespaceName=")
+                .Append(System.Net.WebUtility.UrlEncode(namespaceName))
+                .Append("&objectName=")
+                .Append(System.Net.WebUtility.UrlEncode(objectName));
+
+            return sb.ToString();
+        }
+
+        private static string GetKindIcon(string kindLabel)
+        {
+            return kindLabel switch
+            {
+                "Class" => "bi-building",
+                "Interface" => "bi-diagram-3",
+                "Record" => "bi-card-text",
+                "Struct" => "bi-box",
+                "Enum" => "bi-list-ul",
+                _ => "bi-code-square"
+            };
+        }
+
+        private static string GetRelationshipColor(string relationshipKind)
+        {
+            return relationshipKind switch
+            {
+                "Extends" => "#0dcaf0",
+                "Inherits" => "#0d6efd",
+                "Implements" => "#198754",
+                _ => "#6c757d"
+            };
+        }
+
+        private static string GetRelationshipMarkerId(string relationshipKind, bool useCircleMarker)
+        {
+            string suffix = relationshipKind switch
+            {
+                "Extends" => "extends",
+                "Inherits" => "inherits",
+                "Implements" => "implements",
+                _ => "uses"
+            };
+
+            return "documentation-object-dependency-" + (useCircleMarker ? "circle-" : "arrow-") + suffix;
+        }
+
+        private static string Html(string? value)
+        {
+            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+        }
+
+        private static void RenderColumnHeading(StringBuilder sb, int x, int nodeWidth, string heading)
+        {
+            sb.Append("                                <text x=\"")
+                .Append(x + nodeWidth / 2)
+                .Append("\" y=\"22\" fill=\"currentColor\" font-size=\"12\" font-weight=\"700\" text-anchor=\"middle\">")
+                .Append(Html(heading))
+                .AppendLine("</text>");
+        }
+
         /// <summary>
         ///     Renders a compact two-way SVG dependency graph for one documented object page.
         /// </summary>
@@ -239,159 +405,6 @@ namespace DMBDocumentationBuilder
             return sb.ToString();
         }
 
-        private static string Attribute(string? value)
-        {
-            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
-        }
-
-        private static string BuildObjectRoutePath(
-            string packageId,
-            string version,
-            string groupName,
-            string namespaceName,
-            string objectName
-        )
-        {
-            StringBuilder sb = new();
-            sb.Append("/Documentation/Show?packageId=")
-                .Append(System.Net.WebUtility.UrlEncode(packageId))
-                .Append("&version=")
-                .Append(System.Net.WebUtility.UrlEncode(version))
-                .Append("&groupName=")
-                .Append(System.Net.WebUtility.UrlEncode(groupName))
-                .Append("&namespaceName=")
-                .Append(System.Net.WebUtility.UrlEncode(namespaceName))
-                .Append("&objectName=")
-                .Append(System.Net.WebUtility.UrlEncode(objectName));
-
-            return sb.ToString();
-        }
-
-        private static string GetRelationshipColor(string relationshipKind)
-        {
-            return relationshipKind switch
-            {
-                "Extends" => "#0dcaf0",
-                "Inherits" => "#0d6efd",
-                "Implements" => "#198754",
-                _ => "#6c757d"
-            };
-        }
-
-        private static string Html(string? value)
-        {
-            return System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
-        }
-
-        private static void AppendZoomScript(StringBuilder sb)
-        {
-            sb.AppendLine("                        <script>");
-            sb.AppendLine("                            (function () {");
-            sb.AppendLine("                                document.querySelectorAll('[data-documentation-dependency-graph=\"true\"]').forEach(function (graph) {");
-            sb.AppendLine("                                    if (graph.dataset.documentationDependencyZoomReady === 'true') return;");
-            sb.AppendLine("                                    graph.dataset.documentationDependencyZoomReady = 'true';");
-            sb.AppendLine("                                    var section = graph.closest('section');");
-            sb.AppendLine("                                    if (!section) return;");
-            sb.AppendLine("                                    var svg = graph.querySelector('[data-documentation-dependency-svg=\"true\"]');");
-            sb.AppendLine("                                    var canvas = graph.querySelector('[data-documentation-dependency-canvas=\"true\"]');");
-            sb.AppendLine("                                    if (!svg || !canvas) return;");
-            sb.AppendLine("                                    var valueLabel = section.querySelector('[data-documentation-dependency-zoom-value=\"true\"]');");
-            sb.AppendLine("                                    var baseWidth = Number(canvas.dataset.documentationDependencyBaseWidth) || 1098;");
-            sb.AppendLine("                                    var baseHeight = Number(canvas.dataset.documentationDependencyBaseHeight) || 240;");
-            sb.AppendLine("                                    var baseViewBox = svg.getAttribute('viewBox') || '0 0 ' + baseWidth + ' ' + baseHeight;");
-            sb.AppendLine("                                    var zoom = 1;");
-            sb.AppendLine("                                    function applyZoom() {");
-            sb.AppendLine("                                        var centerX = graph.scrollLeft + graph.clientWidth / 2;");
-            sb.AppendLine("                                        var centerY = graph.scrollTop + graph.clientHeight / 2;");
-            sb.AppendLine("                                        var ratioX = centerX / Math.max(1, graph.scrollWidth);");
-            sb.AppendLine("                                        var ratioY = centerY / Math.max(1, graph.scrollHeight);");
-            sb.AppendLine("                                        var width = Math.round(baseWidth * zoom);");
-            sb.AppendLine("                                        var height = Math.round(baseHeight * zoom);");
-            sb.AppendLine("                                        canvas.style.width = width + 'px';");
-            sb.AppendLine("                                        canvas.style.height = height + 'px';");
-            sb.AppendLine("                                        svg.style.width = width + 'px';");
-            sb.AppendLine("                                        svg.style.height = height + 'px';");
-            sb.AppendLine("                                        svg.setAttribute('viewBox', baseViewBox);");
-            sb.AppendLine("                                        if (valueLabel) valueLabel.textContent = Math.round(zoom * 100) + '%';");
-            sb.AppendLine("                                        window.requestAnimationFrame(function () {");
-            sb.AppendLine("                                            graph.scrollLeft = ratioX * graph.scrollWidth - graph.clientWidth / 2;");
-            sb.AppendLine("                                            graph.scrollTop = ratioY * graph.scrollHeight - graph.clientHeight / 2;");
-            sb.AppendLine("                                        });");
-            sb.AppendLine("                                    }");
-            sb.AppendLine("                                    section.querySelectorAll('[data-documentation-dependency-zoom]').forEach(function (button) {");
-            sb.AppendLine("                                        button.addEventListener('click', function () {");
-            sb.AppendLine("                                            var action = button.getAttribute('data-documentation-dependency-zoom');");
-            sb.AppendLine("                                            if (action === 'in') zoom = Math.min(2.4, zoom + 0.2);");
-            sb.AppendLine("                                            if (action === 'out') zoom = Math.max(0.6, zoom - 0.2);");
-            sb.AppendLine("                                            if (action === 'reset') zoom = 1;");
-            sb.AppendLine("                                            applyZoom();");
-            sb.AppendLine("                                        });");
-            sb.AppendLine("                                    });");
-            sb.AppendLine("                                    applyZoom();");
-            sb.AppendLine("                                });");
-            sb.AppendLine("                            })();");
-            sb.AppendLine("                        </script>");
-        }
-
-        private static void AppendRelationshipMarkers(StringBuilder sb)
-        {
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Extends", false), GetRelationshipColor("Extends"), false);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Extends", true), GetRelationshipColor("Extends"), true);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Inherits", false), GetRelationshipColor("Inherits"), false);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Inherits", true), GetRelationshipColor("Inherits"), true);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Implements", false), GetRelationshipColor("Implements"), false);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Implements", true), GetRelationshipColor("Implements"), true);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Uses", false), GetRelationshipColor("Uses"), false);
-            AppendRelationshipMarker(sb, GetRelationshipMarkerId("Uses", true), GetRelationshipColor("Uses"), true);
-        }
-
-        private static void AppendRelationshipMarker(StringBuilder sb, string markerId, string color, bool useCircleMarker)
-        {
-            sb.Append("                                    <marker id=\"")
-                .Append(markerId)
-                .Append(useCircleMarker
-                    ? "\" markerWidth=\"8\" markerHeight=\"8\" refX=\"4\" refY=\"4\" orient=\"auto\" markerUnits=\"strokeWidth\">"
-                    : "\" markerWidth=\"8\" markerHeight=\"8\" refX=\"6\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\">")
-                .AppendLine();
-
-            if (useCircleMarker)
-            {
-                sb.Append("                                        <circle cx=\"4\" cy=\"4\" r=\"3\" fill=\"")
-                    .Append(color)
-                    .AppendLine("\" fill-opacity=\"0.72\"></circle>");
-            }
-            else
-            {
-                sb.Append("                                        <path d=\"M0,0 L0,6 L7,3 z\" fill=\"")
-                    .Append(color)
-                    .AppendLine("\" fill-opacity=\"0.72\"></path>");
-            }
-
-            sb.AppendLine("                                    </marker>");
-        }
-
-        private static string GetRelationshipMarkerId(string relationshipKind, bool useCircleMarker)
-        {
-            string suffix = relationshipKind switch
-            {
-                "Extends" => "extends",
-                "Inherits" => "inherits",
-                "Implements" => "implements",
-                _ => "uses"
-            };
-
-            return "documentation-object-dependency-" + (useCircleMarker ? "circle-" : "arrow-") + suffix;
-        }
-
-        private static void RenderColumnHeading(StringBuilder sb, int x, int nodeWidth, string heading)
-        {
-            sb.Append("                                <text x=\"")
-                .Append(x + nodeWidth / 2)
-                .Append("\" y=\"22\" fill=\"currentColor\" font-size=\"12\" font-weight=\"700\" text-anchor=\"middle\">")
-                .Append(Html(heading))
-                .AppendLine("</text>");
-        }
-
         private static void RenderNode(
             StringBuilder sb,
             string packageId,
@@ -452,19 +465,6 @@ namespace DMBDocumentationBuilder
                 .Append(Html(Shorten(kindLabel + " - " + namespaceName, 34)))
                 .AppendLine("</text>");
             sb.AppendLine("                                </a>");
-        }
-
-        private static string GetKindIcon(string kindLabel)
-        {
-            return kindLabel switch
-            {
-                "Class" => "bi-building",
-                "Interface" => "bi-diagram-3",
-                "Record" => "bi-card-text",
-                "Struct" => "bi-box",
-                "Enum" => "bi-list-ul",
-                _ => "bi-code-square"
-            };
         }
 
         private static void RenderPath(

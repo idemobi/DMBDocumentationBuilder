@@ -13,7 +13,6 @@ using DMBDocumentationBuilderLabs.Controllers;
 using DMBDocumentationBuilderLabs.Navigation;
 using DMBDocumentationBuilderWebsite;
 using DMBDocumentationViewer;
-using DMBDocumentationViewer.Controllers;
 using DMBEffectBuilder;
 using DMBPageBuilder;
 using DMBServerHelper;

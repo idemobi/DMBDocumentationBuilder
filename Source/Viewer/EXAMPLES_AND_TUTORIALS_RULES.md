@@ -168,7 +168,7 @@ Use the existing DocumentationViewer route through the `Documentation` controlle
     groupName = "NuGet",
     packageId = "DMBDocumentationViewer",
     version = "0.9",
-    namespaceName = "DMBDocumentationViewer.Controllers",
+    namespaceName = "DMBDocumentationViewer",
     objectName = "DocumentationController"
 })
 ```

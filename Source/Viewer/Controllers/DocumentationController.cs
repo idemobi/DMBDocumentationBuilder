@@ -16,7 +16,7 @@ using Microsoft.Data.Sqlite;
 
 #endregion
 
-namespace DMBDocumentationViewer.Controllers
+namespace DMBDocumentationViewer
 {
     /// <summary>
     ///     Renders generated documentation root, group, namespace, and object pages from the documentation database.

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 #endregion
 
-namespace DMBDocumentationTest.Api
+namespace DMBDocumentationTest
 {
     /// <summary>
     ///     Covers common REST resource operations for OpenAPI documentation generation tests.

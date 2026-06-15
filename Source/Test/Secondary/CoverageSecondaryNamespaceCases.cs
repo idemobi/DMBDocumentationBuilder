@@ -5,7 +5,7 @@
 
 #endregion
 
-namespace DMBDocumentationTest.Secondary
+namespace DMBDocumentationTest
 {
     /// <summary>
     ///     Validates that DocumentationViewer navigation displays multiple namespaces for the coverage project.

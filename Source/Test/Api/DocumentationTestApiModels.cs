@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 #endregion
 
-namespace DMBDocumentationTest.Api
+namespace DMBDocumentationTest
 {
     /// <summary>
     ///     Defines the lifecycle status values used by documentation test API resources.
