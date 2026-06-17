@@ -36,7 +36,7 @@ public sealed class DocumentationViewerModelTests
     [Test]
     public void DocumentationViewerConfigurationDefaultsMatchPackageContract()
     {
-        DMBDocumentationViewerConfiguration configuration = new();
+        DocumentationViewerConfiguration configuration = new();
 
         Assert.Multiple(() =>
         {

@@ -51,7 +51,7 @@ using DMBDocumentationViewer;
 
 PageBuilderConfiguration.LoadCommonConfig(builder);
 BootstrapBuilderConfiguration.LoadCommonConfig(builder);
-DMBDocumentationViewerConfiguration.LoadCommonConfig(builder);", CodeLanguage.CSharp)
+DocumentationViewerConfiguration.LoadCommonConfig(builder);", CodeLanguage.CSharp)
                 .SetTitle("Program.cs — services")
                 .SetCopyButton())
 
@@ -68,7 +68,7 @@ DMBDocumentationViewerConfiguration.LoadCommonConfig(builder);", CodeLanguage.CS
             }
             @(Html.CodeBlock(@"WebApplication app = builder.Build();
 
-DMBDocumentationViewerConfiguration.UseApp(app);", CodeLanguage.CSharp)
+DocumentationViewerConfiguration.UseApp(app);", CodeLanguage.CSharp)
                 .SetTitle("Program.cs — middleware")
                 .SetCopyButton())
 
@@ -100,14 +100,14 @@ DocumentationSidebarProvider.Register();", CodeLanguage.CSharp)
                         {
                             @using (Html.PB_Span().AsMonospaceSmall().Begin())
                             {
-                                @:DMBDocumentationViewerConfiguration.LoadCommonConfig(...)
+                                @:DocumentationViewerConfiguration.LoadCommonConfig(...)
                             }
                         }
                         @using (Html.BlockBuilder().AsSidebarRow().Begin())
                         {
                             @using (Html.PB_Span().AsMonospaceSmall().Begin())
                             {
-                                @:DMBDocumentationViewerConfiguration.UseApp(...)
+                                @:DocumentationViewerConfiguration.UseApp(...)
                             }
                         }
                         @using (Html.BlockBuilder().AsSidebarRow().Begin())

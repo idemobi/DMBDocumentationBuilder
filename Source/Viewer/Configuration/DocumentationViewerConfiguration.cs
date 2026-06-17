@@ -25,11 +25,11 @@ namespace DMBDocumentationViewer
     ///     Configures the DocumentationViewer MVC and MCP integration for a host web application.
     /// </summary>
     [Serializable]
-    public class DMBDocumentationViewerConfiguration : WebGenericConfiguration<DMBDocumentationViewerConfiguration>, IServerWebConfig
+    public class DocumentationViewerConfiguration : WebGenericConfiguration<DocumentationViewerConfiguration>, IServerWebConfig
     {
         #region Static constructors and destructors
 
-        static DMBDocumentationViewerConfiguration()
+        static DocumentationViewerConfiguration()
         {
         }
 

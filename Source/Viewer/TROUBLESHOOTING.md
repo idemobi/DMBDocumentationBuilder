@@ -35,7 +35,7 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 
 ### Checks
 
-1. Confirm the MCP endpoint is registered through `DMBDocumentationViewerConfiguration`.
+1. Confirm the MCP endpoint is registered through `DocumentationViewerConfiguration`.
 2. Confirm the same query works through the runtime query service.
 3. Verify source-code and project-context records exist in the generated database.
 4. Keep MCP responses concise; do not expand the formatter with unrelated records.

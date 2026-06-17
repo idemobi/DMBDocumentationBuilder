@@ -29,7 +29,7 @@ PageBuilderConfiguration.LoadCommonConfig(builder);
 BootstrapBuilderConfiguration.LoadCommonConfig(builder);
 ComponentBuilderConfiguration.LoadCommonConfig(builder);
 EffectBuilderConfiguration.LoadCommonConfig(builder);
-DMBDocumentationViewerConfiguration.LoadCommonConfig(builder);
+DocumentationViewerConfiguration.LoadCommonConfig(builder);
 
 DocumentationSidebarFactory.Provider = new DMBDocumentationBuilderLabsDocumentationSidebarProvider();
 
@@ -47,7 +47,7 @@ WebApplication app = builder.Build();
 app.UseHttpsRedirection();
 
 ServerWebHelperConfiguration.UseApp(app);
-DMBDocumentationViewerConfiguration.UseApp(app);
+DocumentationViewerConfiguration.UseApp(app);
 
 app.MapGet("/", context =>
 {

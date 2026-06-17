@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DMBDocumentationBuilderLabs.Controllers
 {
     /// <summary>
-    ///     Provides documentation pages for <see cref="DMBDocumentationViewer.DMBDocumentationViewerConfiguration" />.
+    ///     Provides documentation pages for <see cref="DMBDocumentationViewer.DocumentationViewerConfiguration" />.
     /// </summary>
     public class DocumentationViewerController : RawBootstrapController
     {

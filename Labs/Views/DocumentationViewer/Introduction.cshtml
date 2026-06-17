@@ -146,7 +146,7 @@
             {
                 @using (Html.BlockBuilder().AsPaddedBlock().Begin())
                 {
-                    @(Html.CodeBlock(@"DMBDocumentationViewerConfiguration.UseApp(app)", CodeLanguage.CSharp))
+                    @(Html.CodeBlock(@"DocumentationViewerConfiguration.UseApp(app)", CodeLanguage.CSharp))
                     @using (Html.PB_P().AsSmallMuted().AsNoMargin().Begin())
                     {
                         @:DocumentationViewer exposes generated API pages directly from the application.

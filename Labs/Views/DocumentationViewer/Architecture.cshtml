@@ -63,14 +63,14 @@ DocumentationSidebarProvider.Register();", CodeLanguage.CSharp)
                 @:DocumentationViewer registers MCP tools for querying documentation and project context through the configured endpoint. This allows connected AI agents to look up API summaries, method signatures, namespace structures and cross-package relationships. The endpoint is mapped by
                 @using (Html.PB_Span().AsMonospace().Begin())
                 {
-                    @:DMBDocumentationViewerConfiguration.UseApp(app)
+                    @:DocumentationViewerConfiguration.UseApp(app)
                 }
                 @:.
             }
             @(Html.CodeBlock(@"// MCP tools are registered automatically
-// Endpoint: configured via DMBDocumentationViewerConfiguration
-DMBDocumentationViewerConfiguration.LoadCommonConfig(builder);
-DMBDocumentationViewerConfiguration.UseApp(app);", CodeLanguage.CSharp)
+// Endpoint: configured via DocumentationViewerConfiguration
+DocumentationViewerConfiguration.LoadCommonConfig(builder);
+DocumentationViewerConfiguration.UseApp(app);", CodeLanguage.CSharp)
                 .SetTitle("MCP endpoint setup")
                 .SetCopyButton())
 

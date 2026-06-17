@@ -19,7 +19,7 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 
 - Project name: `DMBDocumentationViewer`
 - Primary API families: MVC documentation controller, MCP tools, SQLite query services, MCP text formatter, sidebar provider/factory, runtime configuration, view models, and query result models.
-- Important types to reference when relevant: `DocumentationController`, `DocumentationMcpTools`, `DocumentationQueryService`, `SourceCodeQueryService`, `ProjectContextQueryService`, `DocumentationMcpTextFormatter`, `IDocumentationSidebarProvider`, `DocumentationSidebarFactory`, `DMBDocumentationViewerConfiguration`, and the models under `Models/`.
+- Important types to reference when relevant: `DocumentationController`, `DocumentationMcpTools`, `DocumentationQueryService`, `SourceCodeQueryService`, `ProjectContextQueryService`, `DocumentationMcpTextFormatter`, `IDocumentationSidebarProvider`, `DocumentationSidebarFactory`, `DocumentationViewerConfiguration`, and the models under `Models/`.
 - Publication host: `labs_idemobi_com`
 - Documentation strategy: viewer-first; AI prepares content, the developer executes generation or verification commands when requested.
 

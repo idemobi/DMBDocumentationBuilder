@@ -1737,7 +1737,7 @@ namespace DMBDocumentationViewer
                     CreateDatabaseGroupSidebar(groupName, resolvedVersion)));
             }
 
-            string endpointPath = DMBDocumentationViewerConfiguration.Config.McpEndpoint;
+            string endpointPath = DocumentationViewerConfiguration.Config.McpEndpoint;
             if (!endpointPath.StartsWith("/", StringComparison.Ordinal))
             {
                 endpointPath = "/" + endpointPath;
