@@ -47,6 +47,54 @@ public sealed class DocumentationViewerModelTests
     }
 
     [Test]
+    public void DocumentationContextOptionsViewModelReportsAvailability()
+    {
+        DocumentationContextOptionsViewModel emptyModel = new();
+        DocumentationContextOptionsViewModel populatedModel = new()
+        {
+            NamespaceName = "DMBServerHelper",
+            Options =
+            [
+                new DocumentationContextOption
+                {
+                    GroupName = "NuGet",
+                    PackageId = "DMBServerHelper",
+                    Version = "0.26.0",
+                    RuleName = "viewer-test-option",
+                    ContextText = "Test context text."
+                }
+            ],
+            Versions =
+            [
+                new DocumentationVersionNavigationItem
+                {
+                    Version = "0.26.0",
+                    IsCurrent = true,
+                    Url = "/Documentation/ContextOptions?version=0.26.0"
+                },
+                new DocumentationVersionNavigationItem
+                {
+                    Version = "0.25.0",
+                    IsCurrent = false,
+                    Url = "/Documentation/ContextOptions?version=0.25.0"
+                }
+            ]
+        };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(emptyModel.HasOptions, Is.False);
+            Assert.That(emptyModel.HasVersionNavigation, Is.False);
+            Assert.That(populatedModel.HasOptions, Is.True);
+            Assert.That(populatedModel.HasVersionNavigation, Is.True);
+            Assert.That(populatedModel.Options[0].PackageId, Is.EqualTo("DMBServerHelper"));
+            Assert.That(populatedModel.Options[0].GroupName, Is.EqualTo("NuGet"));
+            Assert.That(populatedModel.NamespaceName, Is.EqualTo("DMBServerHelper"));
+            Assert.That(populatedModel.Options[0].Version, Is.EqualTo("0.26.0"));
+        });
+    }
+
+    [Test]
     public void MemberDisplayEnumsKeepExpectedOrdering()
     {
         Assert.Multiple(() =>

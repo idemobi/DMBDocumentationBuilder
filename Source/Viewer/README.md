@@ -20,6 +20,7 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 - Query imported OAS3/OpenAPI documents and REST operation contracts from SQLite databases.
 - Query captured C# source files from SQLite for AI coding, refactoring, and deduplication workflows.
 - Build documentation sidebars through `IDocumentationSidebarProvider` and `DocumentationSidebarFactory`.
+- Display copyable versioned context options generated from module `AIContextOptions/*.json` files.
 - Resolve group sidebars from the requested package version, falling back to the latest generated version when no version route value is provided.
 - Preserve the selected documentation version on group return links, breadcrumbs, and root documentation navigation.
 - Provide reader-side display controls for generated member sections when pages expose DocumentationBuilder filter metadata, while showing the menu disabled on documentation pages that do not expose filterable members.
@@ -41,12 +42,26 @@ Use `Html.DocumentationObjectMembers(...)` when a host page needs an exact membe
     .RenderAsync())
 ```
 
+## Context Options
+
+`Documentation/ContextOptions` displays versioned reusable context rules generated from module-owned
+`AIContextOptions/*.json` files.
+
+`DMBDocumentationBuilder` reads those JSON files during documentation generation and stores them in
+`DocumentationAIContextOptions` with the documentation group name, package id, and version. `DMBDocumentationViewer`
+only reads the generated database, so displayed rules match the documented module version.
+
+`DocumentationContextPack/Index` provides a first context pack builder form. It proposes only the latest documented
+version of each rule, groups choices by rule category and sub-category, and exports the selected context texts as a
+ZIP file with a manifest and Markdown files. It does not persist user selections yet.
+
 ## Non-goals
 
 - It does not generate documentation from C# source projects.
 - It does not parse Roslyn symbols or XML comments directly.
 - It does not replace `DMBDocumentationBuilder`.
 - It does not mutate source projects or generated documentation databases.
+- It does not compose, persist, or zip Context Packs.
 
 ## Main folders
 

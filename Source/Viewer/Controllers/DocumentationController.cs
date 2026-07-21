@@ -8,6 +8,7 @@
 #region
 
 using System.Text;
+using System.Text.Json;
 using DMBBootstrapBuilder;
 using DMBPageBuilder;
 using Microsoft.AspNetCore.Hosting;
@@ -212,6 +213,200 @@ namespace DMBDocumentationViewer
             return $"{technical ?? string.Empty} {text ?? string.Empty}".Trim();
         }
 
+        private DocumentationContextOptionsViewModel BuildContextOptionsViewModel(string? groupName, string? version, string? packageId, string? namespaceName)
+        {
+            List<DocumentationContextOption> options = [];
+
+            using var connection = new SqliteConnection($"Data Source={GetSqliteDatabasePath()}");
+            connection.Open();
+
+            if (TableExists(connection, "DocumentationAIContextOptions"))
+            {
+                bool hasGroupNameColumn = ColumnExists(connection, "DocumentationAIContextOptions", "GroupName");
+                string sql = hasGroupNameColumn
+                    ? """
+                      SELECT GroupName, PackageId, Version, FilePath, RuleName, Title, Description,
+                             ScenarioName, ProjectStylesJson, TagsJson, ContextText, SortOrder
+                      FROM DocumentationAIContextOptions
+                      WHERE (@GroupName = '' OR GroupName = @GroupName)
+                        AND (@Version = '' OR Version = @Version)
+                        AND (@PackageId = '' OR PackageId = @PackageId)
+                      ORDER BY GroupName, PackageId, Version, SortOrder, RuleName
+                      """
+                    : """
+                      SELECT '' AS GroupName, PackageId, Version, FilePath, RuleName, Title, Description,
+                             ScenarioName, ProjectStylesJson, TagsJson, ContextText, SortOrder
+                      FROM DocumentationAIContextOptions
+                      WHERE @GroupName = ''
+                        AND (@Version = '' OR Version = @Version)
+                        AND (@PackageId = '' OR PackageId = @PackageId)
+                      ORDER BY PackageId, Version, SortOrder, RuleName
+                      """;
+
+                using var command = new SqliteCommand(sql, connection);
+                command.Parameters.AddWithValue("@GroupName", groupName ?? string.Empty);
+                command.Parameters.AddWithValue("@PackageId", packageId ?? string.Empty);
+                command.Parameters.AddWithValue("@Version", version ?? string.Empty);
+
+                using SqliteDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    string optionPackageId = reader["PackageId"]?.ToString() ?? string.Empty;
+                    string optionVersion = reader["Version"]?.ToString() ?? string.Empty;
+                    string ruleName = reader["RuleName"]?.ToString() ?? string.Empty;
+
+                    options.Add(new DocumentationContextOption
+                    {
+                        GroupName = reader["GroupName"]?.ToString() ?? string.Empty,
+                        PackageId = optionPackageId,
+                        Version = optionVersion,
+                        RuleName = ruleName,
+                        FilePath = reader["FilePath"]?.ToString() ?? string.Empty,
+                        Title = reader["Title"]?.ToString() ?? ruleName,
+                        Description = reader["Description"]?.ToString() ?? string.Empty,
+                        ScenarioName = reader["ScenarioName"]?.ToString() ?? string.Empty,
+                        ProjectStyles = ReadJsonStringArray(reader["ProjectStylesJson"]?.ToString()),
+                        Tags = ReadJsonStringArray(reader["TagsJson"]?.ToString()),
+                        ContextText = reader["ContextText"]?.ToString() ?? string.Empty,
+                        SortOrder = Convert.ToInt32(reader["SortOrder"])
+                    });
+                }
+            }
+
+            string resolvedPackageId = ResolveContextOptionsPackageId(packageId, options);
+
+            return new DocumentationContextOptionsViewModel
+            {
+                GroupName = groupName ?? string.Empty,
+                PackageId = resolvedPackageId,
+                NamespaceName = namespaceName ?? string.Empty,
+                Version = version ?? string.Empty,
+                Options = options,
+                Versions = GetContextOptionVersionNavigationItems(groupName, resolvedPackageId, version, namespaceName)
+            };
+        }
+
+        private static string ResolveContextOptionsPackageId(
+            string? packageId,
+            IEnumerable<DocumentationContextOption> options
+        )
+        {
+            if (!string.IsNullOrWhiteSpace(packageId))
+            {
+                return packageId;
+            }
+
+            string[] packageIds = options
+                .Select(option => option.PackageId)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            return packageIds.Length == 1
+                ? packageIds[0]
+                : string.Empty;
+        }
+
+        private IReadOnlyList<DocumentationVersionNavigationItem> GetContextOptionVersionNavigationItems(
+            string? groupName,
+            string? packageId,
+            string? currentVersion,
+            string? namespaceName
+        )
+        {
+            if (string.IsNullOrWhiteSpace(groupName) ||
+                string.IsNullOrWhiteSpace(currentVersion))
+            {
+                return [];
+            }
+
+            using var connection = new SqliteConnection($"Data Source={GetSqliteDatabasePath()}");
+            connection.Open();
+
+            if (!TableExists(connection, "DocumentationObjects"))
+            {
+                return [];
+            }
+
+            bool hasGroupNameColumn = ColumnExists(connection, "DocumentationObjects", "GroupName");
+            string sql = hasGroupNameColumn
+                ? """
+                  SELECT DISTINCT Version
+                  FROM DocumentationObjects
+                  WHERE GroupName = @GroupName
+                    AND (@PackageId = '' OR PackageId = @PackageId)
+                    AND Version IS NOT NULL
+                    AND Version <> ''
+                  """
+                : """
+                  SELECT DISTINCT Version
+                  FROM DocumentationObjects
+                  WHERE (@PackageId = '' OR PackageId = @PackageId)
+                    AND Version IS NOT NULL
+                    AND Version <> ''
+                  """;
+
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@PackageId", packageId ?? string.Empty);
+
+            if (hasGroupNameColumn)
+            {
+                command.Parameters.AddWithValue("@GroupName", groupName);
+            }
+
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<string> versions = [];
+
+            while (reader.Read())
+            {
+                string version = reader["Version"]?.ToString() ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(version))
+                {
+                    versions.Add(version);
+                }
+            }
+
+            return versions
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(version => version, DocumentationVersionComparer.Instance)
+                .Select(version => new DocumentationVersionNavigationItem
+                {
+                    Version = version,
+                    IsCurrent = string.Equals(version, currentVersion, StringComparison.OrdinalIgnoreCase),
+                    Url = Url.Action(
+                        nameof(ContextOptions),
+                        "Documentation",
+                        new
+                        {
+                            groupName,
+                            packageId,
+                            namespaceName,
+                            version
+                        }) ?? string.Empty
+                })
+                .Where(item => !string.IsNullOrWhiteSpace(item.Url))
+                .ToArray();
+        }
+
+        private static IReadOnlyList<string> ReadJsonStringArray(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return [];
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<string>>(json) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
+            }
+        }
+
         private SideBarSectionComponent CreateDatabaseRootSidebar()
         {
             return CreateDatabaseSidebar("Root", "Documentation", string.Empty, string.Empty, string.Empty, string.Empty);
@@ -303,6 +498,27 @@ namespace DMBDocumentationViewer
             {
                 sidebar.Add(item);
             }
+
+            AspRouteActionItem contextOptionsAction = new AspRouteActionItem("Documentation", nameof(ContextOptions))
+                .SetTitle("Context options")
+                .SetIcon(IconStruct.Bootstrap("bi-clipboard-check"));
+
+            AddRouteValue(contextOptionsAction, "groupName", groupName);
+            AddRouteValue(contextOptionsAction, "packageId", packageId);
+            AddRouteValue(contextOptionsAction, "version", version);
+            AddRouteValue(contextOptionsAction, "namespaceName", namespaceName);
+
+            sidebar.Add(contextOptionsAction);
+
+            AspRouteActionItem contextPackAction = new AspRouteActionItem("DocumentationContextPack", nameof(DocumentationContextPackController.Index))
+                .SetTitle("Context pack")
+                .SetIcon(IconStruct.Bootstrap("bi-file-zip"));
+
+            AddRouteValue(contextPackAction, "groupName", groupName);
+            AddRouteValue(contextPackAction, "packageId", packageId);
+            AddRouteValue(contextPackAction, "namespaceName", namespaceName);
+
+            sidebar.Add(contextPackAction);
 
             return sidebar;
         }
@@ -1544,6 +1760,41 @@ namespace DMBDocumentationViewer
             SetKeywords("documentation");
 
             return View("~/Views/Documentation/Index.cshtml");
+        }
+
+        /// <summary>
+        ///     Renders the copyable context option catalog generated from module AIContextOptions files.
+        /// </summary>
+        /// <param name="groupName">Optional documentation group filter.</param>
+        /// <param name="version">Optional documentation version filter.</param>
+        /// <param name="packageId">Optional package filter.</param>
+        /// <param name="namespaceName">Optional namespace used to keep the documentation sidebar scope.</param>
+        /// <returns>The context option catalog view.</returns>
+        public IActionResult ContextOptions(string? groupName = null, string? version = null, string? packageId = null, string? namespaceName = null)
+        {
+            DocumentationContextOptionsViewModel model = BuildContextOptionsViewModel(groupName, version, packageId, namespaceName);
+
+            AddBreadcrumb(
+                new UrlActionItem().WithUrl("/").SetTitle("Home").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_house)),
+                new AspRouteActionItem("Documentation", "Index").SetTitle("Documentation").SetIcon(IconStruct.BootstrapEnum(BootStrapEnum.bi_book)),
+                new AspRouteActionItem("Documentation", nameof(ContextOptions)).SetTitle("Context options").SetIcon(IconStruct.Bootstrap("bi-clipboard-check"))
+            );
+
+            SideBarSectionComponent sidebarSection = !string.IsNullOrWhiteSpace(model.GroupName) && !string.IsNullOrWhiteSpace(model.Version)
+                ? string.IsNullOrWhiteSpace(model.PackageId)
+                    ? CreateDatabaseGroupSidebar(model.GroupName, model.Version)
+                    : string.IsNullOrWhiteSpace(model.NamespaceName)
+                        ? CreateDatabaseProjectSidebar(model.GroupName, model.PackageId, model.Version)
+                        : CreateDatabaseNamespaceSidebar(model.GroupName, model.NamespaceName, model.PackageId, model.Version)
+                : CreateDatabaseRootSidebar();
+
+            SetSidebar(new SideBarComponent().AddSection(sidebarSection));
+
+            SetDescription("Copyable context rules generated by DocumentationBuilder for documentation groups and versions.");
+            SetTitle("Context options");
+            SetKeywords($"documentation context options context pack ai {model.GroupName} {model.PackageId} {model.NamespaceName} {model.Version}");
+
+            return View("~/Views/Documentation/ContextOptions.cshtml", model);
         }
 
         /// <summary>

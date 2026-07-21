@@ -1,0 +1,105 @@
+@using DMBBootstrapBuilder
+@using DMBComponentBuilder
+@using DMBPageBuilder
+@model DMBDocumentationViewer.DocumentationContextPackViewModel
+@{
+    Layout = "_Layout";
+}
+
+<div class="mb-4">
+    @(Html.TitleBuilder()
+        .SetTitle("Context pack", TitleLevel.One)
+        .SetIcon(IconStruct.Bootstrap("bi-file-zip"))
+        .Render())
+
+    @using (Html.PB_P().AddClass("lead text-body-secondary mb-0").Begin())
+    {
+        @:Select latest-version context options and export them as a ZIP file.
+    }
+</div>
+
+@if (!Model.HasOptions)
+{
+    @using (Html.AlertBuilder()
+        .SetTitle("No contextual options")
+        .SetVariant(VariantStyle.Warning)
+        .SetIcon(IconStruct.Bootstrap("bi-exclamation-triangle"))
+        .Begin())
+    {
+        <hr />
+        @:No latest context option is available for the selected documentation scope.
+    }
+}
+else
+{
+    <form method="post" action="@Url.Action("Download", "DocumentationContextPack")">
+        <input type="hidden" name="GroupName" value="@Model.GroupName" />
+        <input type="hidden" name="PackageId" value="@Model.PackageId" />
+        <input type="hidden" name="NamespaceName" value="@Model.NamespaceName" />
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
+            <div class="small text-body-secondary">
+                <span class="fw-semibold text-body">Latest options</span>
+                @if (!string.IsNullOrWhiteSpace(Model.PackageId))
+                {
+                    <span class="ms-1">@Model.PackageId</span>
+                }
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-file-zip"></i>
+                Export ZIP
+            </button>
+        </div>
+
+        @foreach (var categoryGroup in Model.Options
+                     .GroupBy(option => option.Category, StringComparer.Ordinal)
+                     .OrderBy(group => group.Key, StringComparer.Ordinal))
+        {
+            @using (Html.BlockBuilder().AddClass("border rounded-3 p-4 mb-4").Begin())
+            {
+                @Html.TitleBuilder().SetTitle(categoryGroup.Key, TitleLevel.Three).SetIcon(IconStruct.Bootstrap("bi-folder2-open")).Render()
+
+                @foreach (var subCategoryGroup in categoryGroup
+                             .GroupBy(option => option.SubCategory, StringComparer.Ordinal)
+                             .OrderBy(group => group.Key, StringComparer.Ordinal))
+                {
+                    <div class="border-top pt-3 mt-3">
+                        @Html.TitleBuilder().SetTitle(subCategoryGroup.Key, TitleLevel.Five).SetIcon(IconStruct.Bootstrap("bi-diagram-2")).AddClass("mb-3").Render()
+
+                        @foreach (DMBDocumentationViewer.DocumentationContextPackOption option in subCategoryGroup
+                                     .OrderBy(option => option.SortOrder)
+                                     .ThenBy(option => option.Title, StringComparer.Ordinal))
+                        {
+                            string inputId = $"context-option-{option.Fingerprint}";
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="SelectedFingerprints" value="@option.Fingerprint" id="@inputId" checked />
+                                <label class="form-check-label w-100" for="@inputId">
+                                    <span class="fw-semibold">@option.Title</span>
+                                    <span class="ms-2 small font-monospace text-body-secondary">@option.Version</span>
+                                    <span class="d-block text-body-secondary">@option.Description</span>
+                                </label>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2 mb-3 ms-4">
+                                <span class="badge text-bg-light border">@option.RuleName</span>
+                                @foreach (string style in option.ProjectStyles)
+                                {
+                                    <span class="badge text-bg-secondary">@style</span>
+                                }
+                                @foreach (string tag in option.Tags)
+                                {
+                                    <span class="badge text-bg-light border text-body">@tag</span>
+                                }
+                            </div>
+
+                            @(Html.CodeBlock(option.ContextText, CodeLanguage.PlainText)
+                                .SetTitle("Context text")
+                                .SetCompact())
+                        }
+                    </div>
+                }
+            }
+        }
+    </form>
+}

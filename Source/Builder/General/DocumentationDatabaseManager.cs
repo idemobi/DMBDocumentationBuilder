@@ -112,6 +112,39 @@ namespace DMBDocumentationBuilder
             transaction.Commit();
         }
 
+        /// <summary>
+        ///     Deletes generated AI context options for one documentation group package version before regeneration.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The SQLite database path that contains generated documentation metadata.</param>
+        /// <param name="groupName">The documentation group name whose AI context options should be deleted.</param>
+        /// <param name="packageId">The package identifier whose AI context options should be deleted.</param>
+        /// <param name="version">The package version whose AI context options should be deleted.</param>
+        public static void DeleteAIContextOptions(
+            string sqliteDatabasePath,
+            string groupName,
+            string packageId,
+            string version
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            const string sql = """
+                               DELETE FROM DocumentationAIContextOptions
+                               WHERE (GroupName = @GroupName OR GroupName = '')
+                                 AND PackageId = @PackageId
+                                 AND Version = @Version
+                               """;
+
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@GroupName", groupName);
+            command.Parameters.AddWithValue("@PackageId", packageId);
+            command.Parameters.AddWithValue("@Version", version);
+            command.ExecuteNonQuery();
+        }
+
         private static void EnsureColumnExists(
             SqliteConnection connection,
             string tableName,
@@ -137,6 +170,28 @@ namespace DMBDocumentationBuilder
             using SqliteCommand alterCommand = connection.CreateCommand();
             alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition}";
             alterCommand.ExecuteNonQuery();
+        }
+
+        private static bool ColumnExists(
+            SqliteConnection connection,
+            string tableName,
+            string columnName
+        )
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA table_info({tableName})";
+
+            using SqliteDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                if (string.Equals(reader["name"]?.ToString(), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -366,6 +421,34 @@ namespace DMBDocumentationBuilder
                 CREATE INDEX IF NOT EXISTS IX_ProjectContext_Source
                 ON DocumentationProjectContextFiles (SourceFolderType);
 
+                CREATE TABLE IF NOT EXISTS DocumentationAIContextOptions
+                (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                    GroupName TEXT NOT NULL DEFAULT '',
+                    PackageId TEXT NOT NULL,
+                    Version TEXT NOT NULL,
+
+                    ProjectFilePath TEXT NOT NULL,
+                    ProjectDirectoryPath TEXT NOT NULL,
+
+                    FilePath TEXT NOT NULL,
+                    RuleName TEXT NOT NULL,
+
+                    Title TEXT NOT NULL DEFAULT '',
+                    Description TEXT NOT NULL DEFAULT '',
+                    ScenarioName TEXT NOT NULL DEFAULT '',
+                    ProjectStylesJson TEXT NOT NULL DEFAULT '[]',
+                    TagsJson TEXT NOT NULL DEFAULT '[]',
+                    ContextText TEXT NOT NULL,
+                    SortOrder INTEGER NOT NULL DEFAULT 0,
+
+                    CreatedUtc TEXT NOT NULL,
+                    UpdatedUtc TEXT NOT NULL,
+
+                    UNIQUE (GroupName, PackageId, Version, RuleName)
+                );
+
                 CREATE TABLE IF NOT EXISTS DocumentationSidebarItems
                 (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -410,6 +493,8 @@ namespace DMBDocumentationBuilder
                         "DocumentationOpenApiOperations",
                         "SecurityJson",
                         "TEXT NOT NULL DEFAULT '[]'");
+
+                    EnsureAIContextOptionsSchema(connection);
                 }
 
                 TableCreatedDatabasePaths.Add(resolvedDatabasePath);
@@ -458,6 +543,104 @@ namespace DMBDocumentationBuilder
             return normalizedPatterns.ToArray();
         }
 
+        private static void EnsureAIContextOptionsSchema(SqliteConnection connection)
+        {
+            if (ColumnExists(connection, "DocumentationAIContextOptions", "GroupName"))
+            {
+                EnsureAIContextOptionsIndexes(connection);
+                return;
+            }
+
+            using (SqliteCommand renameCommand = connection.CreateCommand())
+            {
+                renameCommand.CommandText = """
+                                            ALTER TABLE DocumentationAIContextOptions
+                                            RENAME TO DocumentationAIContextOptions_Legacy
+                                            """;
+                renameCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand createCommand = connection.CreateCommand())
+            {
+                createCommand.CommandText = """
+                                            CREATE TABLE DocumentationAIContextOptions
+                                            (
+                                                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                                                GroupName TEXT NOT NULL DEFAULT '',
+                                                PackageId TEXT NOT NULL,
+                                                Version TEXT NOT NULL,
+
+                                                ProjectFilePath TEXT NOT NULL,
+                                                ProjectDirectoryPath TEXT NOT NULL,
+
+                                                FilePath TEXT NOT NULL,
+                                                RuleName TEXT NOT NULL,
+
+                                                Title TEXT NOT NULL DEFAULT '',
+                                                Description TEXT NOT NULL DEFAULT '',
+                                                ScenarioName TEXT NOT NULL DEFAULT '',
+                                                ProjectStylesJson TEXT NOT NULL DEFAULT '[]',
+                                                TagsJson TEXT NOT NULL DEFAULT '[]',
+                                                ContextText TEXT NOT NULL,
+                                                SortOrder INTEGER NOT NULL DEFAULT 0,
+
+                                                CreatedUtc TEXT NOT NULL,
+                                                UpdatedUtc TEXT NOT NULL,
+
+                                                UNIQUE (GroupName, PackageId, Version, RuleName)
+                                            )
+                                            """;
+                createCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand copyCommand = connection.CreateCommand())
+            {
+                copyCommand.CommandText = """
+                                          INSERT INTO DocumentationAIContextOptions
+                                          (GroupName, PackageId, Version, ProjectFilePath, ProjectDirectoryPath,
+                                           FilePath, RuleName, Title, Description, ScenarioName,
+                                           ProjectStylesJson, TagsJson, ContextText, SortOrder,
+                                           CreatedUtc, UpdatedUtc)
+                                          SELECT '', PackageId, Version, ProjectFilePath, ProjectDirectoryPath,
+                                                 FilePath, RuleName, Title, Description, ScenarioName,
+                                                 ProjectStylesJson, TagsJson, ContextText, SortOrder,
+                                                 CreatedUtc, UpdatedUtc
+                                          FROM DocumentationAIContextOptions_Legacy
+                                          """;
+                copyCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand dropCommand = connection.CreateCommand())
+            {
+                dropCommand.CommandText = "DROP TABLE DocumentationAIContextOptions_Legacy";
+                dropCommand.ExecuteNonQuery();
+            }
+
+            EnsureAIContextOptionsIndexes(connection);
+        }
+
+        private static void EnsureAIContextOptionsIndexes(SqliteConnection connection)
+        {
+            using (SqliteCommand groupIndexCommand = connection.CreateCommand())
+            {
+                groupIndexCommand.CommandText = """
+                                                CREATE INDEX IF NOT EXISTS IX_AIContextOptions_Group_Package_Version
+                                                ON DocumentationAIContextOptions (GroupName, PackageId, Version)
+                                                """;
+                groupIndexCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand ruleIndexCommand = connection.CreateCommand())
+            {
+                ruleIndexCommand.CommandText = """
+                                               CREATE INDEX IF NOT EXISTS IX_AIContextOptions_Rule
+                                               ON DocumentationAIContextOptions (RuleName)
+                                               """;
+                ruleIndexCommand.ExecuteNonQuery();
+            }
+        }
+
         /// <summary>
         ///     Removes persisted documentation records for obsolete documentation versions.
         /// </summary>
@@ -472,7 +655,7 @@ namespace DMBDocumentationBuilder
         /// <exception cref="ArgumentException">Thrown when a version pattern is empty or uses an unsupported wildcard.</exception>
         /// <remarks>
         ///     The purge is executed inside one SQLite transaction and affects generated objects, object sources, members,
-        ///     source file snapshots, project context files, OpenAPI records, and sidebar entries.
+        ///     source file snapshots, project context files, AI context options, OpenAPI records, and sidebar entries.
         /// </remarks>
         public static int PurgeVersions(
             string sqliteDatabasePath,
@@ -499,6 +682,7 @@ namespace DMBDocumentationBuilder
                 "DocumentationObjectSources",
                 "DocumentationSourceFiles",
                 "DocumentationProjectContextFiles",
+                "DocumentationAIContextOptions",
                 "DocumentationObjects"
             ];
 
@@ -1148,6 +1332,96 @@ namespace DMBDocumentationBuilder
             command.Parameters.AddWithValue("@SourceFolderType", sourceFolderType);
             command.Parameters.AddWithValue("@DirectoryDepth", directoryDepth);
             command.Parameters.AddWithValue("@Content", content);
+            command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
+            command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
+
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        ///     Saves a group-scoped versioned AI context option entry to SQLite.
+        /// </summary>
+        /// <param name="sqliteDatabasePath">The sqliteDatabasePath value used by the documentation generation operation.</param>
+        /// <param name="groupName">The documentation group name used by the documentation generation operation.</param>
+        /// <param name="packageId">The packageId value used by the documentation generation operation.</param>
+        /// <param name="version">The version value used by the documentation generation operation.</param>
+        /// <param name="projectFilePath">The projectFilePath value used by the documentation generation operation.</param>
+        /// <param name="projectDirectoryPath">The projectDirectoryPath value used by the documentation generation operation.</param>
+        /// <param name="filePath">The filePath value used by the documentation generation operation.</param>
+        /// <param name="ruleName">The stable rule name defined by the JSON file or file name.</param>
+        /// <param name="title">The option title displayed by DocumentationViewer.</param>
+        /// <param name="description">The option description displayed by DocumentationViewer.</param>
+        /// <param name="scenarioName">The scenario name associated with the option.</param>
+        /// <param name="projectStylesJson">The JSON array of compatible project styles.</param>
+        /// <param name="tagsJson">The JSON array of display and filtering tags.</param>
+        /// <param name="contextText">The copyable context text.</param>
+        /// <param name="sortOrder">The display order within the documentation group package version.</param>
+        public static void SaveAIContextOption(
+            string sqliteDatabasePath,
+            string groupName,
+            string packageId,
+            string version,
+            string projectFilePath,
+            string projectDirectoryPath,
+            string filePath,
+            string ruleName,
+            string title,
+            string description,
+            string scenarioName,
+            string projectStylesJson,
+            string tagsJson,
+            string contextText,
+            int sortOrder
+        )
+        {
+            EnsureTableCreated(sqliteDatabasePath);
+
+            string nowUtc = DateTime.UtcNow.ToString("O");
+
+            using var connection = new SqliteConnection($"Data Source={sqliteDatabasePath}");
+            connection.Open();
+
+            const string sql = @"
+    INSERT INTO DocumentationAIContextOptions
+    (GroupName, PackageId, Version, ProjectFilePath, ProjectDirectoryPath,
+     FilePath, RuleName, Title, Description, ScenarioName,
+     ProjectStylesJson, TagsJson, ContextText, SortOrder,
+     CreatedUtc, UpdatedUtc)
+    VALUES
+    (@GroupName, @PackageId, @Version, @ProjectFilePath, @ProjectDirectoryPath,
+     @FilePath, @RuleName, @Title, @Description, @ScenarioName,
+     @ProjectStylesJson, @TagsJson, @ContextText, @SortOrder,
+     @CreatedUtc, @UpdatedUtc)
+    ON CONFLICT(GroupName, PackageId, Version, RuleName) DO UPDATE SET
+        ProjectFilePath = excluded.ProjectFilePath,
+        ProjectDirectoryPath = excluded.ProjectDirectoryPath,
+        FilePath = excluded.FilePath,
+        Title = excluded.Title,
+        Description = excluded.Description,
+        ScenarioName = excluded.ScenarioName,
+        ProjectStylesJson = excluded.ProjectStylesJson,
+        TagsJson = excluded.TagsJson,
+        ContextText = excluded.ContextText,
+        SortOrder = excluded.SortOrder,
+        UpdatedUtc = excluded.UpdatedUtc;
+    ";
+
+            using var command = new SqliteCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@GroupName", groupName);
+            command.Parameters.AddWithValue("@PackageId", packageId);
+            command.Parameters.AddWithValue("@Version", version);
+            command.Parameters.AddWithValue("@ProjectFilePath", projectFilePath);
+            command.Parameters.AddWithValue("@ProjectDirectoryPath", projectDirectoryPath);
+            command.Parameters.AddWithValue("@FilePath", filePath);
+            command.Parameters.AddWithValue("@RuleName", ruleName);
+            command.Parameters.AddWithValue("@Title", title);
+            command.Parameters.AddWithValue("@Description", description);
+            command.Parameters.AddWithValue("@ScenarioName", scenarioName);
+            command.Parameters.AddWithValue("@ProjectStylesJson", projectStylesJson);
+            command.Parameters.AddWithValue("@TagsJson", tagsJson);
+            command.Parameters.AddWithValue("@ContextText", contextText);
+            command.Parameters.AddWithValue("@SortOrder", sortOrder);
             command.Parameters.AddWithValue("@CreatedUtc", nowUtc);
             command.Parameters.AddWithValue("@UpdatedUtc", nowUtc);
 

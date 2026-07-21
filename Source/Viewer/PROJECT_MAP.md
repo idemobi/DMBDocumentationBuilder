@@ -19,6 +19,7 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 - `Controllers/`
   - Runtime entry points.
   - `DocumentationController` renders group, namespace, object, OpenAPI REST API, content, and generic MCP connection pages.
+  - `DocumentationContextPackController` renders the latest-version context pack builder form and ZIP export.
   - `DocumentationMcpTools` exposes documentation, REST API, OpenAPI document, source file, source snapshot, coding context, and project-context lookup tools.
 
 - `Managers/`
@@ -27,7 +28,7 @@ When copying this file to another PageBuilder ecosystem project, update this sec
 
 - `Models/`
   - Query result models and Razor view models.
-  - Includes documentation records, search results, OpenAPI query results, source-code results, captured source file results, project-context file results, AI-render source metadata, and page render models.
+  - Includes documentation records, search results, OpenAPI query results, source-code results, captured source file results, project-context file results, AI-render source metadata, context option pack models, and page render models.
 
 - `Sidebar/`
   - Sidebar extension points and default sidebar creation.

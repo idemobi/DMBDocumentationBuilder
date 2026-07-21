@@ -7,6 +7,7 @@
 
 #region
 
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -114,24 +115,6 @@ namespace DMBDocumentationBuilder
                 {
                     if (!File.Exists(project.ProjectFilePath))
                     {
-                        DocumentationProjectContextModel context = DocumentationProjectContextExtractor.Extract(project);
-                        foreach (var file in context.Files)
-                        {
-                            DocumentationDatabaseManager.SaveProjectContextFile(
-                                sqliteDatabasePath,
-                                context.PackageId,
-                                context.Version,
-                                context.ProjectFilePath,
-                                context.ProjectDirectoryPath,
-                                file.FilePath,
-                                file.FileName,
-                                file.ContextType,
-                                file.SourceFolderType,
-                                file.DirectoryDepth,
-                                file.Content
-                            );
-                        }
-
                         string fullPath = project.ProjectFilePath;
                         string lastValidDir = "unknown";
                         string[] pathParts = fullPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -151,13 +134,60 @@ namespace DMBDocumentationBuilder
                     bool hasPackageId = !string.IsNullOrWhiteSpace(project.PackageId);
                     bool hasVersion = !string.IsNullOrWhiteSpace(project.Version);
 
-                    if (hasPackageId && hasVersion) continue;
+                    if (!hasPackageId || !hasVersion)
+                    {
+                        (string packageId, string version) = ReadProjectMetadata(project.ProjectFilePath);
 
-                    (string packageId, string version) = ReadProjectMetadata(project.ProjectFilePath);
+                        if (!hasPackageId) project.PackageId = packageId;
 
-                    if (!hasPackageId) project.PackageId = packageId;
+                        if (!hasVersion) project.Version = version;
+                    }
 
-                    if (!hasVersion) project.Version = version;
+                    DocumentationProjectContextModel context = DocumentationProjectContextExtractor.Extract(project);
+                    foreach (DocumentationProjectContextFileModel file in context.Files)
+                    {
+                        DocumentationDatabaseManager.SaveProjectContextFile(
+                            sqliteDatabasePath,
+                            context.PackageId,
+                            context.Version,
+                            context.ProjectFilePath,
+                            context.ProjectDirectoryPath,
+                            file.FilePath,
+                            file.FileName,
+                            file.ContextType,
+                            file.SourceFolderType,
+                            file.DirectoryDepth,
+                            file.Content
+                        );
+                    }
+
+                    DocumentationAIContextOptionModel contextOptions = DocumentationAIContextOptionExtractor.Extract(project, group.GroupName);
+                    DocumentationDatabaseManager.DeleteAIContextOptions(
+                        sqliteDatabasePath,
+                        contextOptions.GroupName,
+                        contextOptions.PackageId,
+                        contextOptions.Version);
+
+                    foreach (DocumentationAIContextOptionFileModel option in contextOptions.Files)
+                    {
+                        DocumentationDatabaseManager.SaveAIContextOption(
+                            sqliteDatabasePath,
+                            contextOptions.GroupName,
+                            contextOptions.PackageId,
+                            contextOptions.Version,
+                            contextOptions.ProjectFilePath,
+                            contextOptions.ProjectDirectoryPath,
+                            option.FilePath,
+                            option.RuleName,
+                            option.Title,
+                            option.Description,
+                            option.ScenarioName,
+                            JsonSerializer.Serialize(option.ProjectStyles),
+                            JsonSerializer.Serialize(option.Tags),
+                            option.ContextText,
+                            option.SortOrder
+                        );
+                    }
                 }
             }
         }
